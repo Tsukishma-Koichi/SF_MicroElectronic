@@ -1,0 +1,11 @@
+# 强制所有文本文件使用 LF 换行符，且不自动转换
+* text=auto eol=lf
+
+# 针对特定文件类型（如源码）禁用换行符转换
+*.h -text
+*.c -text
+*.txt -text
+
+# 或直接指定路径（如 CMSIS 相关文件）
+libraries/sdk/common/hdr/cmsis/** -text
+libraries/sdk/common/src/ethstack/** -text
