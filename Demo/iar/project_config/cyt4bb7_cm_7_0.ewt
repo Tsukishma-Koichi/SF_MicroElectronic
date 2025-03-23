@@ -1462,6 +1462,12 @@
             <name>$PROJ_DIR$\..\..\code\pid.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\code\uart.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\uart.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\code\wluart.c</name>
         </file>
         <file>

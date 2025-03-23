@@ -7,5 +7,6 @@
 #include "pid.h"
 #include "wluart.h"
 #include "osc.h"
+#include "uart.h"
 
 #endif

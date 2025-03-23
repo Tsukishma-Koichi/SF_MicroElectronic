@@ -71,3 +71,28 @@ void PID_PostionalPID(PID *p, float target, float cur)
     // 进行数据更新
     p->preError = error;
 }
+
+
+
+/**
+ * @brief 获取差速目标
+ * 
+ */
+//void Motor_GetTarget(void)
+//{
+//    if (Steer_current - STEER_MID >= MOTOR_DIFSPEED_THRE)
+//    {
+//        Motor2_target = Motor_target;
+//        Motor1_target = Motor_target * (1 - MOTOR_DIFSPEED_FACTOR * (Steer_current - STEER_MID) / STEER_MAX_ERR);
+//    }
+//    else if (STEER_MID - Steer_current >= MOTOR_DIFSPEED_THRE)
+//    {
+//        Motor1_target = Motor_target;
+//        Motor2_target = Motor_target * (1 - MOTOR_DIFSPEED_FACTOR * (STEER_MID - Steer_current) / STEER_MAX_ERR);
+//    }
+//    else 
+//    {
+//        Motor1_target = Motor_target;
+//        Motor2_target = Motor_target;
+//    }
+//}

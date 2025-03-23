@@ -18,10 +18,10 @@ void OSC_Init(void)
 
 }
 
-void OSC_Send(uint16 target, uint16 Data)
+void OSC_Send(uint16 target, uint16 Data1, uint16 Data2)
 {
     seekfree_assistant_oscilloscope_send(&oscilloscope_data);
-    printf("Encodeder:%d,%d\n", target, Data);
+    printf("Encodeder:%d,%d,%d\n", target, Data1, Data2);
 //            oscilloscope_data.data[0] = 200.0;
 //            oscilloscope_data.data[1] = 1.0*Encoder_GetCnt(R);
 }

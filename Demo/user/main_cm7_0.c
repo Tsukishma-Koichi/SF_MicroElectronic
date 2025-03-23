@@ -12,18 +12,17 @@
 uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
 
-
-
 int main(void)
 {
     clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
     debug_init();                  // 调试串口信息初始化
     OSC_Init();
     pit_ms_init(PIT0, 5);
-    pit_ms_init(PIT1, 500);
+    pit_ms_init(PIT1, 100);
     WLUART_Init();
     Encoder_Init();
     Motor_Init();
+    UART_Init();
     
     // PID初始化
     Motor_PID_Init();
@@ -36,25 +35,25 @@ int main(void)
 
     while(true)
     {
-        if(pit_00_state)
+      if(pit_00_state)
         {
-//            Encoder_print();
+
           
             MotorR_PIDwork(200);
 //            MotorL_PIDwork(200); 
 //            Motor_L(1, 2000);
 //            Motor_R(1, 2000);
-
             pit_00_state = 0;
         }
         
         if(pit_01_state)
         {
-            OSC_Send(200, Encoder_GetCnt(R));
+            OSC_Send(200, Encoder_GetCnt(L), Encoder_GetCnt(R));
             
             pit_01_state = 0;
         }
 
+        
 //        system_delay_ms(50);
       
 

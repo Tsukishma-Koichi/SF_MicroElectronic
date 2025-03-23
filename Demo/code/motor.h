@@ -28,9 +28,9 @@ void Motor_L(uint8 dir, uint16 duty);
 void Motor_R(uint8 dir, uint16 duty);
 
 // PID²ÎÊý
-#define MOTOR_PID_P             (12)
-#define MOTOR_PID_I             (0.8)
-#define MOTOR_PID_D             (-1)
+#define MOTOR_PID_P             (18)
+#define MOTOR_PID_I             (0.03)
+#define MOTOR_PID_D             (-5)
 #define MOTOR_PID_SL            (2500)
 #define MOTOR_PID_UL            (4000)
 
