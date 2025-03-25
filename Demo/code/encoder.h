@@ -15,12 +15,21 @@
 
 #define R   'R'
 #define L   'L'
+
+#define ENCODER_FILTER_MAX          (4)
+//对外接口
+extern int16 Encoder_1Data;
+extern int16 Encoder_2Data;
+extern int16 Encoder_1DataRead;
+extern int16 Encoder_2DataRead;
+extern uint8 Encoder_readFinishStatus;
                                                                                 
 extern int16 encoder_data_quad[];
 
 void Encoder_Init(void);
 void Encoder_print(void);
 uint16 Encoder_GetCnt(uint8 RorL);
+void Encoder_SpeedRead(void);
 
 
 #endif

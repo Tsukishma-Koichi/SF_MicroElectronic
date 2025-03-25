@@ -9,8 +9,10 @@
 // **************************** 代码区域 ****************************
 #define PIT0                             (PIT_CH0 )                             // 使用的周期中断编号
 #define PIT1                             (PIT_CH1 )
+#define PIT2                             (PIT_CH2 )
 uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
+uint8 pit_02_state = 0;
 
 int main(void)
 {
@@ -19,40 +21,53 @@ int main(void)
     OSC_Init();
     pit_ms_init(PIT0, 5);
     pit_ms_init(PIT1, 100);
+    pit_ms_init(PIT2, 5000);
     WLUART_Init();
     Encoder_Init();
     Motor_Init();
     UART_Init();
+    imu660ra_init();
+    Gyroscope_Init(GYROSCOPE_IMU660RA, 5); // 初始化陀螺仪，设置时间间隔为 10ms
+
     
     // PID初始化
     Motor_PID_Init();
 
-    Motor1_PID_Set(MOTOR_PID_P, MOTOR_PID_I, MOTOR_PID_D, MOTOR_PID_SL, MOTOR_PID_UL, 1);
-    Motor2_PID_Set(MOTOR_PID_P, MOTOR_PID_I, MOTOR_PID_D, MOTOR_PID_SL, MOTOR_PID_UL, 1);
+    Motor1_PID_Set(MOTOR1_PID_P, MOTOR1_PID_I, MOTOR1_PID_D, MOTOR1_PID_SL, MOTOR1_PID_UL, 1);
+    Motor2_PID_Set(MOTOR2_PID_P, MOTOR2_PID_I, MOTOR2_PID_D, MOTOR2_PID_SL, MOTOR2_PID_UL, 1);
 
     
 
 
     while(true)
     {
-      if(pit_00_state)
+     
+        Motor1_target = Motor_target;
+        Motor2_target = Motor_target;
+        if(pit_00_state)
         {
+//            printf("GX: %.2f GY: %.2f GZ: %.2f AX: %.2f AY: %.2f AZ: %.2f\r\n",Gyro_corrX, Gyro_corrY, Gyro_corrZ, Acc_corrX, Acc_corrY, Acc_corrZ);// 发送数据到串口
 
-          
-            MotorR_PIDwork(200);
-//            MotorL_PIDwork(200); 
-//            Motor_L(1, 2000);
-//            Motor_R(1, 2000);
+            Encoder_SpeedRead();
+//            Motor_SetSpeed(MOTOR_2, (int16)2000);
+//            Motor1_PIDwork();
+//            Motor2_PIDwork();
             pit_00_state = 0;
         }
         
         if(pit_01_state)
         {
-            OSC_Send(200, Encoder_GetCnt(L), Encoder_GetCnt(R));
+//            OSC_Send((int16)Motor_target, Encoder_1Data, Encoder_2Data);
+//            
+            pit_01_state = 0;
+        }
+        
+        if(pit_02_state)
+        {
+//            Motor_target = 200;
             
             pit_01_state = 0;
         }
-
         
 //        system_delay_ms(50);
       

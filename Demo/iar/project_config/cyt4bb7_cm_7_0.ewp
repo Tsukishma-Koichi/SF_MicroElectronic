@@ -1122,13 +1122,13 @@
             <name>$PROJ_DIR$\..\..\code\encoder.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\code\gyro.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\gyro.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\code\headfile.h</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\..\code\imu660.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\..\code\imu660.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\code\motor.c</name>

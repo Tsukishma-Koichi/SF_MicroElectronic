@@ -14,25 +14,46 @@
 //      接线端子 +          电池正极
 //      接线端子 -          电池负极
 
-#define DUTY_MAX            (4000)                                               // 最大 MAX_DUTY% 占空比
-#define DUTY_LIM            (10000)
+//#define DUTY_MAX            (4000)                                               // 最大 MAX_DUTY% 占空比
+//#define DUTY_LIM            (10000)
 
-#define DIR_L              (P09_1)
-#define PWM_L              (TCPWM_CH24_P09_0)
+#define MOTOR_1_DIR              (P09_1)
+#define MOTOR_1_PWM              (TCPWM_CH24_P09_0)
 
-#define DIR_R              (P10_3)
-#define PWM_R              (TCPWM_CH30_P10_2)
+#define MOTOR_2_DIR              (P10_3)
+#define MOTOR_2_PWM              (TCPWM_CH30_P10_2)
+
+extern float Motor_target;
+extern float Motor1_target;   // 电机1PID目标（编码器读数）
+extern float Motor2_target;   // 电机2PID目标（编码器读数）
+
+typedef enum
+{
+    MOTOR_1 = 0x00,
+    MOTOR_2 = 0x01
+} MOTOR_PWM_enum;
 
 void Motor_Init(void);
-void Motor_L(uint8 dir, uint16 duty);
-void Motor_R(uint8 dir, uint16 duty);
+//void Motor_L(uint8 dir, uint16 duty);
+//void Motor_R(uint8 dir, uint16 duty);
+void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 
 // PID参数
-#define MOTOR_PID_P             (18)
-#define MOTOR_PID_I             (0.03)
-#define MOTOR_PID_D             (-5)
-#define MOTOR_PID_SL            (2500)
-#define MOTOR_PID_UL            (4000)
+#define MOTOR1_PID_P             (120)
+#define MOTOR1_PID_I             (0.5)
+#define MOTOR1_PID_D             (-0.2)
+#define MOTOR1_PID_SL            (2500)
+#define MOTOR1_PID_UL            (3000)
+
+#define MOTOR2_PID_P             (120)
+#define MOTOR2_PID_I             (0.5)
+#define MOTOR2_PID_D             (-1)
+#define MOTOR2_PID_SL            (2500)
+#define MOTOR2_PID_UL            (3000)
+
+// 差速相关
+#define MOTOR_DIFSPEED_FACTOR   (0.25)   // 差速修正系数
+#define MOTOR_DIFSPEED_THRE     (45)    // 差速触发死区（摄像头偏航角）
 
 void Motor_PID_Init(void);
 void Motor1_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
@@ -49,8 +70,8 @@ void Motor2_SetPIDSumLimit(float pLimit);
 void Motor2_SetPIDCoLimit(float coLimt);
 void Motor_pidClear(void);
 
-void MotorR_PIDwork(float MotorR_target);
-void MotorL_PIDwork(float MotorL_target);
+void Motor1_PIDwork(void);
+void Motor2_PIDwork(void);
 
 
 #endif

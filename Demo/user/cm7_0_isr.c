@@ -35,12 +35,17 @@
 
 
 #include "zf_common_headfile.h"
+#include "headfile.h"
 extern uint8 pit_00_state;
 extern uint8 pit_01_state;
+extern uint8 pit_02_state;
 // **************************** PIT中断函数 ****************************
 void pit0_ch0_isr()
 {
+    interrupt_global_enable(0); // 开启中断嵌套
     pit_isr_flag_clear(PIT_CH0);
+    
+//    Gyroscope_GetData();
   
     pit_00_state = 1;
 	
@@ -64,7 +69,7 @@ void pit0_ch2_isr()
     pit_isr_flag_clear(PIT_CH2);
 	
 	
-	
+	pit_02_state = 1;
 	
 }
 // **************************** PIT中断函数 ****************************

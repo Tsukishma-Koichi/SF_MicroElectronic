@@ -2,7 +2,7 @@
 #define _HEADER_H_
 
 #include "encoder.h"
-#include "imu660.h"
+#include "gyro.h"
 #include "motor.h"
 #include "pid.h"
 #include "wluart.h"
