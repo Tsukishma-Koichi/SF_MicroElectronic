@@ -2,7 +2,6 @@
 #define _MOTOR_H_
 
 #include "zf_common_headfile.h"
-#include "encoder.h"
 #include "headfile.h"
 //      模块管脚            单片机管脚
 //      1DIR                P09_1 或者 P05_1
@@ -38,22 +37,33 @@ void Motor_Init(void);
 //void Motor_R(uint8 dir, uint16 duty);
 void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 
-// PID参数
-#define MOTOR1_PID_P             (120)
-#define MOTOR1_PID_I             (0.5)
-#define MOTOR1_PID_D             (-0.2)
-#define MOTOR1_PID_SL            (2500)
-#define MOTOR1_PID_UL            (3000)
+// PID参数 位置式
+//#define MOTOR_PID_P             (60)
+//#define MOTOR_PID_I             (0.5)
+//#define MOTOR_PID_D             (-2)
+//#define MOTOR_PID_SL            (2500)
+//#define MOTOR_PID_UL            (3000)
+//增量式
+#define MOTOR_PID_P             (9.5)
+#define MOTOR_PID_I             (1.2)
+#define MOTOR_PID_D             (0)
+#define MOTOR_PID_SL            (2000)
+#define MOTOR_PID_UL            (2500)
 
-#define MOTOR2_PID_P             (120)
-#define MOTOR2_PID_I             (0.5)
-#define MOTOR2_PID_D             (-1)
-#define MOTOR2_PID_SL            (2500)
-#define MOTOR2_PID_UL            (3000)
 
-// 差速相关
-#define MOTOR_DIFSPEED_FACTOR   (0.25)   // 差速修正系数
-#define MOTOR_DIFSPEED_THRE     (45)    // 差速触发死区（摄像头偏航角）
+//// 差速相关
+//#define MOTOR_DIFSPEED_FACTOR   (0.25)   // 差速修正系数
+//#define MOTOR_DIFSPEED_THRE     (45)    // 差速触发死区（摄像头偏航角）
+//#define Diff_MAX                (90)
+
+//差速PID
+#define MOTOR_Diff_PID_P             (9.5)
+#define MOTOR_Diff_PID_I             (1.2)
+#define MOTOR_Diff_PID_D             (0)
+#define MOTOR_Diff_PID_SL            (20)
+#define MOTOR_Diff_PID_UL            (35)
+
+extern float Motor_target;
 
 void Motor_PID_Init(void);
 void Motor1_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
@@ -69,6 +79,11 @@ void Motor2_SetPIDD(float setD);
 void Motor2_SetPIDSumLimit(float pLimit);
 void Motor2_SetPIDCoLimit(float coLimt);
 void Motor_pidClear(void);
+
+//void Motor_GetTarget(void);
+void Motor_Diff(void);
+void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
+
 
 void Motor1_PIDwork(void);
 void Motor2_PIDwork(void);

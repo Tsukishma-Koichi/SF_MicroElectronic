@@ -41,8 +41,8 @@
 vuint8 ipc_port_save; 
 vuint8 ipc_released; 
 
-static void ipc_default_callback (uint32 ipc_data);
-
+//static void ipc_default_callback (uint32 ipc_data);
+static void ipc_default_callback (int ipc_data);
 ipc_callback_function user_callback = ipc_default_callback;
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     默认回调函数
@@ -51,7 +51,8 @@ ipc_callback_function user_callback = ipc_default_callback;
 // 使用示例     
 // 备注信息     保护性冗余设计 防止在没有初始化设备的时候跑飞
 //-------------------------------------------------------------------------------------------------------------------
-static void ipc_default_callback (uint32 ipc_data)
+//static void ipc_default_callback (uint32 ipc_data)
+static void ipc_default_callback (int ipc_data)
 {
     (void)ipc_data;
 }
@@ -89,7 +90,8 @@ void ipc_received_callback(uint32_t *ipc_msg)
 // 使用示例     ipc_send_data(0x00000001);
 // 备注信息     
 //-------------------------------------------------------------------------------------------------------------------
-uint8 ipc_send_data(uint32 send_data)
+//uint8 ipc_send_data(uint32 send_data)
+uint8 ipc_send_data(int send_data)
 {
     communicate_data_t pipedata;
     uint32 wait_time_us = 5000;

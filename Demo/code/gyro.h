@@ -2,6 +2,7 @@
 #define CODE_OPHOT_GYROSCOPE_H_
 
 #include "zf_common_headfile.h"
+//#include "filter.h"
 
 #define GYRO_FILTER_MAX (10) //мсбщргбк╡╗пРап╢Сп║
 

@@ -9,4 +9,7 @@
 #include "osc.h"
 #include "uart.h"
 
+
+extern int Diff_Data;
+
 #endif

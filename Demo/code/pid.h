@@ -32,6 +32,7 @@ typedef struct STRUCT_PID PID;
 void PID_Init(PID* p);
 void PID_SetParameter(PID* p, float setP, float setI, float setD, float pLimit, float coLimit, float boost);
 void PID_PostionalPID(PID* p, float target, float cur);
+void PID_IncrementalPID(PID *p, float target, float cur);
 
 
 #endif

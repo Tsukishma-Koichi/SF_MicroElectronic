@@ -14,6 +14,16 @@ uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
 uint8 pit_02_state = 0;
 
+int Diff_Data = 0;              //接收偏差值
+
+// 定义数据接收回调函数 如果另外一个核心发送信息 此核心会触发中断并且可以在回调函数读取数据
+void my_ipc_callback(int receive_data)
+{
+    Diff_Data = receive_data;
+    printf("receive data:%d\r\n", receive_data);        // 将接收到的数据打印到串口   
+}
+
+
 int main(void)
 {
     clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
@@ -28,41 +38,41 @@ int main(void)
     UART_Init();
     imu660ra_init();
     Gyroscope_Init(GYROSCOPE_IMU660RA, 5); // 初始化陀螺仪，设置时间间隔为 10ms
+    
+    SCB_DisableDCache(); // 关闭DCashe
+    ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口2 填写中断回调函数
+
 
     
     // PID初始化
     Motor_PID_Init();
 
-    Motor1_PID_Set(MOTOR1_PID_P, MOTOR1_PID_I, MOTOR1_PID_D, MOTOR1_PID_SL, MOTOR1_PID_UL, 1);
-    Motor2_PID_Set(MOTOR2_PID_P, MOTOR2_PID_I, MOTOR2_PID_D, MOTOR2_PID_SL, MOTOR2_PID_UL, 1);
+    
 
     
 
 
     while(true)
     {
-     
-        Motor1_target = Motor_target;
-        Motor2_target = Motor_target;
-        if(pit_00_state)
+        if(pit_00_state)        //5ms 编码器|电机|陀螺仪
         {
-//            printf("GX: %.2f GY: %.2f GZ: %.2f AX: %.2f AY: %.2f AZ: %.2f\r\n",Gyro_corrX, Gyro_corrY, Gyro_corrZ, Acc_corrX, Acc_corrY, Acc_corrZ);// 发送数据到串口
-
             Encoder_SpeedRead();
+
+//            Motor_GetTarget();
 //            Motor_SetSpeed(MOTOR_2, (int16)2000);
-//            Motor1_PIDwork();
-//            Motor2_PIDwork();
+            Motor1_PIDwork();
+            Motor2_PIDwork();
             pit_00_state = 0;
         }
         
-        if(pit_01_state)
+        if(pit_01_state)        //100ms 虚拟示波器
         {
-//            OSC_Send((int16)Motor_target, Encoder_1Data, Encoder_2Data);
+            OSC_Send((int16)Motor_target, Encoder_1Data, Encoder_2Data);
 //            
             pit_01_state = 0;
         }
         
-        if(pit_02_state)
+        if(pit_02_state)        //
         {
 //            Motor_target = 200;
             

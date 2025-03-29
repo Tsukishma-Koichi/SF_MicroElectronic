@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BuildDb>
+    <Tool>
+        <Name>linker</Name>
+        <Parent>
+            <Path>E:\IAR\V1.1.1_25323\Demo\iar\Debug_m0_plus\Exe\cyt4bb7_cm_0_plus.out</Path>
+            <Output>
+                <Path>E:\IAR\V1.1.1_25323\Demo\iar\Debug_m0_plus\List\cyt4bb7_cm_0_plus.map</Path>
+            </Output>
+        </Parent>
+    </Tool>
+</BuildDb>

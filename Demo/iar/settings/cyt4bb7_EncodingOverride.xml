@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<userOverrides>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\common.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\filter.h</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\motor.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\motor.h</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\osc.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\pid.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\view_fun.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\user\main_cm7_0.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\user\main_cm7_1.c</path>
+        <encoding>System</encoding>
+    </override>
+</userOverrides>

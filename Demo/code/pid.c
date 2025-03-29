@@ -72,27 +72,22 @@ void PID_PostionalPID(PID *p, float target, float cur)
     p->preError = error;
 }
 
-
-
 /**
- * @brief 获取差速目标
- * 
+ * @brief               增量式PID
+ * @param p             用来工作的PID参数
+ * @param target        目标值
+ * @param cur           当前值
+ *
  */
-//void Motor_GetTarget(void)
-//{
-//    if (Steer_current - STEER_MID >= MOTOR_DIFSPEED_THRE)
-//    {
-//        Motor2_target = Motor_target;
-//        Motor1_target = Motor_target * (1 - MOTOR_DIFSPEED_FACTOR * (Steer_current - STEER_MID) / STEER_MAX_ERR);
-//    }
-//    else if (STEER_MID - Steer_current >= MOTOR_DIFSPEED_THRE)
-//    {
-//        Motor1_target = Motor_target;
-//        Motor2_target = Motor_target * (1 - MOTOR_DIFSPEED_FACTOR * (STEER_MID - Steer_current) / STEER_MAX_ERR);
-//    }
-//    else 
-//    {
-//        Motor1_target = Motor_target;
-//        Motor2_target = Motor_target;
-//    }
-//}
+void PID_IncrementalPID(PID *p, float target, float cur)
+{
+    float error = target - cur;
+    // 数据进行增加
+    p->ut += p->kP * (error - p->preError) + p->kI * error + p->kD * (error - 2 * p->preError + p->preError);
+    // 进行修正限幅
+    p->ut = p->ut > p->utLimit ? p->utLimit : p->ut;
+    p->ut = p->ut < -p->utLimit ? -p->utLimit : p->ut;
+    // 进行数据更新
+    p->ppreError = p->preError;
+    p->preError = error;
+}

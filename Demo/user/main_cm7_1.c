@@ -34,6 +34,8 @@
 ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"
+#include "common.h"
+#include "view_fun.h"
 // 打开新的工程或者工程移动了位置务必执行以下操作
 // 第一步 关闭上面所有打开的文件
 // 第二步 project->clean  等待下方进度条走完
@@ -44,39 +46,93 @@
 
 // **************************** 代码区域 ****************************
 
+
+uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];             // 边界及中线数组
+
+static uint8 filted_buffer[188*120];      // 滤波后缓冲区
+static uint8 binary_buffer[188*120];      // 二值化缓冲区
+uint8 img[MT9V03X_H][MT9V03X_W];          // 预处理后图像
+
+uint8 threshold = 128;                    // 二值化阈值
+int send_data = 0;                        // 预传递参数
+uint8 pit_00_state;                       // 00中断标志位
+
+int flag = 10;
+
 int main(void)
 {
-    clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
-    debug_info_init();                  // 调试串口信息初始化
-     
-    ips114_init();
-    ips114_show_string(0, 0, "mt9v03x init.");
-    while(1)
-    {
-        if(mt9v03x_init())
-            ips114_show_string(0, 16, "mt9v03x reinit.");
-        else
-            break;
-        system_delay_ms(500);                                                   // 短延时快速闪灯表示异常
-    }
-    ips114_show_string(0, 16, "init success.");
+    Main_Init();       
     
-    
-    // 此处编写用户代码 例如外设初始化代码等
     while(true)
     {
-        // 此处编写需要循环执行的代码
-
-        if(mt9v03x_finish_flag)
+        // 接受到新的帧
+        if (mt9v03x_finish_flag)
         {
-            ips114_displayimage03x((const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);                             // 显示原始图像
-//            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 240, 135, 64);       // 显示灰度图像
             mt9v03x_finish_flag = 0;
+            
+            // 图像处理
+            //mean_filter((uint8 *)mt9v03x_image, (uint8 *)filted_buffer);               // 图像滤波
+            
+            image_binarize((uint8 *)mt9v03x_image, binary_buffer, MT9V03X_W, MT9V03X_H, threshold);             // 二值化
+            
+            memcpy(img[0], &binary_buffer[0], MT9V03X_IMAGE_SIZE);               // 在发送前将图像备份再进行发送，这样可以避免图像出现撕裂的问题
+            
+            send_data = seek_boundary(img);                  // 扫线
+            
+            ipc_send_data(send_data);                        // 发送数据给核心M7_0
+       
+            ips114_displayimage03x((const uint8 *)img, MT9V03X_W, MT9V03X_H);    //显示图像
         }
-      
-      
-        // 此处编写需要循环执行的代码
+        
+        // 每隔5秒重算二值化阈值
+        if (pit_00_state)
+        {
+            //threshold = otsu_threshold((uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);
+            threshold = 130;
+//            printf("threshold = %d\r\n", threshold);
+            pit_00_state = 0;                                                      // 清空周期中断触发标志位
+        }
     }
 }
+
+
+
+
+
+
+//int main(void)
+//{
+//    clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
+//    debug_info_init();                  // 调试串口信息初始化
+//     
+//    ips114_init();
+//    ips114_show_string(0, 0, "mt9v03x init.");
+//    while(1)
+//    {
+//        if(mt9v03x_init())
+//            ips114_show_string(0, 16, "mt9v03x reinit.");
+//        else
+//            break;
+//        system_delay_ms(500);                                                   // 短延时快速闪灯表示异常
+//    }
+//    ips114_show_string(0, 16, "init success.");
+//    
+//    
+//    // 此处编写用户代码 例如外设初始化代码等
+//    while(true)
+//    {
+//        // 此处编写需要循环执行的代码
+//
+//        if(mt9v03x_finish_flag)
+//        {
+//            ips114_displayimage03x((const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);                             // 显示原始图像
+////            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 240, 135, 64);       // 显示灰度图像
+//            mt9v03x_finish_flag = 0;
+//        }
+//      
+//      
+//        // 此处编写需要循环执行的代码
+//    }
+//}
 
 // **************************** 代码区域 ****************************

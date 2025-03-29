@@ -1429,6 +1429,18 @@
     <group>
         <name>code</name>
         <file>
+            <name>$PROJ_DIR$\..\..\code\common.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\common.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\view_fun.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\view_fun.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\code\本文件夹作用.txt</name>
         </file>
     </group>
