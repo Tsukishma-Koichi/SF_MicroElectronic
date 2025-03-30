@@ -8,8 +8,8 @@
 #include "wluart.h"
 #include "osc.h"
 #include "uart.h"
+#include "monitor_re.h"
 
 
-extern int Diff_Data;
 
 #endif

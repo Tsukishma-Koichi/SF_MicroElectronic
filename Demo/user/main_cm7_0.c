@@ -14,14 +14,8 @@ uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
 uint8 pit_02_state = 0;
 
-int Diff_Data = 0;              //接收偏差值
 
-// 定义数据接收回调函数 如果另外一个核心发送信息 此核心会触发中断并且可以在回调函数读取数据
-void my_ipc_callback(int receive_data)
-{
-    Diff_Data = receive_data;
-    printf("receive data:%d\r\n", receive_data);        // 将接收到的数据打印到串口   
-}
+
 
 
 int main(void)
@@ -31,13 +25,13 @@ int main(void)
     OSC_Init();
     pit_ms_init(PIT0, 5);
     pit_ms_init(PIT1, 100);
-    pit_ms_init(PIT2, 5000);
+    pit_ms_init(PIT2, 500);
     WLUART_Init();
     Encoder_Init();
     Motor_Init();
     UART_Init();
-    imu660ra_init();
-    Gyroscope_Init(GYROSCOPE_IMU660RA, 5); // 初始化陀螺仪，设置时间间隔为 10ms
+//    imu660ra_init();
+//    Gyroscope_Init(GYROSCOPE_IMU660RA, 5); // 初始化陀螺仪，设置时间间隔为 10ms
     
     SCB_DisableDCache(); // 关闭DCashe
     ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口2 填写中断回调函数
@@ -45,11 +39,7 @@ int main(void)
 
     
     // PID初始化
-    Motor_PID_Init();
-
-    
-
-    
+    Motor_PID_Init();  
 
 
     while(true)
@@ -57,9 +47,10 @@ int main(void)
         if(pit_00_state)        //5ms 编码器|电机|陀螺仪
         {
             Encoder_SpeedRead();
+            Monitor_ReRead();
+            Motor_Diff();
 
-//            Motor_GetTarget();
-//            Motor_SetSpeed(MOTOR_2, (int16)2000);
+
             Motor1_PIDwork();
             Motor2_PIDwork();
             pit_00_state = 0;
@@ -67,16 +58,16 @@ int main(void)
         
         if(pit_01_state)        //100ms 虚拟示波器
         {
-            OSC_Send((int16)Motor_target, Encoder_1Data, Encoder_2Data);
+            OSC_Send(0, Monitor_Data, Motor1_target, Motor2_target, Motor_target, Encoder_1Data, Encoder_2Data, Diff_Data);
 //            
             pit_01_state = 0;
         }
         
-        if(pit_02_state)        //
+        if(pit_02_state)        //50ms
         {
 //            Motor_target = 200;
             
-            pit_01_state = 0;
+            pit_02_state = 0;
         }
         
 //        system_delay_ms(50);

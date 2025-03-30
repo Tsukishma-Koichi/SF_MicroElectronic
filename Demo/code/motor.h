@@ -25,6 +25,9 @@
 extern float Motor_target;
 extern float Motor1_target;   // 电机1PID目标（编码器读数）
 extern float Motor2_target;   // 电机2PID目标（编码器读数）
+extern float Motor_D_target;
+
+//extern PID Motor_Diff_PID;
 
 typedef enum
 {
@@ -43,25 +46,32 @@ void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 //#define MOTOR_PID_D             (-2)
 //#define MOTOR_PID_SL            (2500)
 //#define MOTOR_PID_UL            (3000)
-//增量式
+//增量式 75
 #define MOTOR_PID_P             (9.5)
 #define MOTOR_PID_I             (1.2)
 #define MOTOR_PID_D             (0)
 #define MOTOR_PID_SL            (2000)
 #define MOTOR_PID_UL            (2500)
-
+//增量式 10
+#define MOTOR_D_PID_P             (100.5)
+#define MOTOR_D_PID_I             (0)
+#define MOTOR_D_PID_D             (0)
+#define MOTOR_D_PID_SL            (2000)
+#define MOTOR_D_PID_UL            (2500)
 
 //// 差速相关
 //#define MOTOR_DIFSPEED_FACTOR   (0.25)   // 差速修正系数
 //#define MOTOR_DIFSPEED_THRE     (45)    // 差速触发死区（摄像头偏航角）
 //#define Diff_MAX                (90)
 
-//差速PID
-#define MOTOR_Diff_PID_P             (9.5)
-#define MOTOR_Diff_PID_I             (1.2)
-#define MOTOR_Diff_PID_D             (0)
-#define MOTOR_Diff_PID_SL            (20)
-#define MOTOR_Diff_PID_UL            (35)
+//差速PID 位置式
+#define MOTOR_Diff_PID_P             (2)
+#define MOTOR_Diff_PID_I             (0.8)
+#define MOTOR_Diff_PID_D             (300)
+#define MOTOR_Diff_PID_SL            (40)
+#define MOTOR_Diff_PID_UL            (150)
+
+#define MOTOR_Diff_threshold            (10)
 
 extern float Motor_target;
 
@@ -83,8 +93,8 @@ void Motor_pidClear(void);
 //void Motor_GetTarget(void);
 void Motor_Diff(void);
 void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
-
-
+void Motor1_D_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
+void Motor2_D_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
 void Motor1_PIDwork(void);
 void Motor2_PIDwork(void);
 

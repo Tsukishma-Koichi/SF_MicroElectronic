@@ -9,6 +9,10 @@
         <encoding>System</encoding>
     </override>
     <override>
+        <path>E:\IAR\V1.1.1_25323\Demo\code\monitor_re.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
         <path>E:\IAR\V1.1.1_25323\Demo\code\motor.c</path>
         <encoding>System</encoding>
     </override>

@@ -6,7 +6,7 @@
 extern seekfree_assistant_oscilloscope_struct oscilloscope_data;
 
 void OSC_Init(void);
-void OSC_Send(uint16 target, uint16 Data1, uint16 Data2);
+void OSC_Send(int Data0, int Data1, int Data2, int Data3, int Data4, int Data5, int Data6, int Data7);
 
 
 #endif

@@ -11,17 +11,16 @@ void OSC_Init(void)
     
     
 
-    oscilloscope_data.data[0] = 200.0;
-    oscilloscope_data.data[1] = 0;
+//    oscilloscope_data.data[0] = 200.0;
+//    oscilloscope_data.data[1] = 0;
     // 设置为4个通道，通道数量最大为8个
-    oscilloscope_data.channel_num = 2;
+    oscilloscope_data.channel_num = 8;
 
 }
 
-void OSC_Send(uint16 target, uint16 Data1, uint16 Data2)
+void OSC_Send(int Data0, int Data1, int Data2, int Data3, int Data4, int Data5, int Data6, int Data7)
 {
     seekfree_assistant_oscilloscope_send(&oscilloscope_data);
-    printf("Encodeder:%d,%d,%d\n", target, Data1, Data2);
-//            oscilloscope_data.data[0] = 200.0;
-//            oscilloscope_data.data[1] = 1.0*Encoder_GetCnt(R);
+    printf("OSC:%d,%d,%d,%d,%d\n", Data0, Data1, Data2, Data3, Data4, Data5, Data6, Data7);
+
 }

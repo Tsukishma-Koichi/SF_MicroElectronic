@@ -1131,6 +1131,12 @@
             <name>$PROJ_DIR$\..\..\code\headfile.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\code\monitor_re.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\monitor_re.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\code\motor.c</name>
         </file>
         <file>
