@@ -25,7 +25,6 @@
 extern float Motor_target;
 extern float Motor1_target;   // 电机1PID目标（编码器读数）
 extern float Motor2_target;   // 电机2PID目标（编码器读数）
-extern float Motor_D_target;
 
 //extern PID Motor_Diff_PID;
 
@@ -51,18 +50,9 @@ void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 #define MOTOR_PID_I             (1.2)
 #define MOTOR_PID_D             (0)
 #define MOTOR_PID_SL            (2000)
-#define MOTOR_PID_UL            (2500)
-//增量式 10
-#define MOTOR_D_PID_P             (100.5)
-#define MOTOR_D_PID_I             (0)
-#define MOTOR_D_PID_D             (0)
-#define MOTOR_D_PID_SL            (2000)
-#define MOTOR_D_PID_UL            (2500)
+#define MOTOR_PID_UL            (4500)
 
-//// 差速相关
-//#define MOTOR_DIFSPEED_FACTOR   (0.25)   // 差速修正系数
-//#define MOTOR_DIFSPEED_THRE     (45)    // 差速触发死区（摄像头偏航角）
-//#define Diff_MAX                (90)
+
 
 //差速PID 位置式
 #define MOTOR_Diff_PID_P             (2)
@@ -70,31 +60,29 @@ void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 #define MOTOR_Diff_PID_D             (300)
 #define MOTOR_Diff_PID_SL            (40)
 #define MOTOR_Diff_PID_UL            (150)
+//差速双PD
+#define MOTOR_Diff_PD_P1             (0.03)
+#define MOTOR_Diff_PD_P2             (0)
+#define MOTOR_Diff_PD_D1             (3.5)
+#define MOTOR_Diff_PD_D2             (0.008)
+#define MOTOR_Diff_PD_UL             (350)
 
-#define MOTOR_Diff_threshold            (10)
+#define MOTOR_Diff_threshold            (500)
+
+
 
 extern float Motor_target;
 
 void Motor_PID_Init(void);
 void Motor1_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
 void Motor2_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
-void Motor1_SetPIDP(float setP);
-void Motor1_SetPIDI(float setI);
-void Motor1_SetPIDD(float setD);
-void Motor1_SetPIDSumLimit(float pLimit);
-void Motor1_SetPIDCoLimit(float coLimt);
-void Motor2_SetPIDP(float setP);
-void Motor2_SetPIDI(float setI);
-void Motor2_SetPIDD(float setD);
-void Motor2_SetPIDSumLimit(float pLimit);
-void Motor2_SetPIDCoLimit(float coLimt);
+
 void Motor_pidClear(void);
 
 //void Motor_GetTarget(void);
 void Motor_Diff(void);
 void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
-void Motor1_D_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
-void Motor2_D_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
+void Motor_Diff_PD_Set(float Kp1, float Kp2, float Kd1, float Kd2, float coLimit, float boost);
 void Motor1_PIDwork(void);
 void Motor2_PIDwork(void);
 

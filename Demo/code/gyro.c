@@ -1,3 +1,5 @@
+
+
 #include "gyro.h"
 
 //------------------------------基本变量------------------------------
@@ -7,12 +9,11 @@ uint16 Gyroscope_time = 0;
 GYROSCOPE_TYPE Gyroscope_device = GYROSCOPE_IMU660RA;
 // 陀螺仪偏移量
 struct GyroscopeOffset Gyro_Offset;
-// y轴角速度滤波序列
-float GyroY_FilterData[GYRO_FILTER_MAX];
-// 滤波权重
-float Gyro_FilterWeigh[GYRO_FILTER_MAX] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-// 滤波数据指针
-uint8 Gyro_FilterPointer = 0;
+
+// 定义Z轴专用缓冲区和权重
+float z_gyro_buffer[GYRO_FILTER_SIZE] = {0};  // 初始化为0
+float z_weights[GYRO_FILTER_SIZE] = {0.05,0.05,0.1,0.1,0.1,0.15,0.15,0.15,0.1,0.05};  // 权重总和≈1，越新的数据权重越高
+uint8_t z_data_ptr = 0;  // 环形缓冲区指针（必须为全局变量或静态变量，确保持久化）
 
 //------------------------------计数变量------------------------------
 //------------------------------
@@ -26,10 +27,14 @@ float Acc_z;  // 加速度z值 - 速度 单位m/s
 
 float Gyro_corrX; // 陀螺仪x值 - 角速度 单位°/s
 float Gyro_corrY; // 陀螺仪y值 - 角速度 单位°/s
+
 float Gyro_corrZ; // 陀螺仪z值 - 角速度 单位°/s
+float filtered_z_gyro;
+
 float Acc_corrX;  // 加速度x值 - 加速度 单位m/s^2
 float Acc_corrY;  // 加速度y值 - 加速度 单位m/s^2
 float Acc_corrZ;  // 加速度z值 - 加速度 单位m/s^2
+float test =0;
 
 //------------------------------
 // 计数状态机
@@ -196,7 +201,16 @@ void Gyroscope_GetData(void)
     imu660ra_get_acc();
     Gyro_corrX = imu660ra_gyro_transition((float)imu660ra_gyro_x - Gyro_Offset.Gyro_Xdata);
     Gyro_corrY = imu660ra_gyro_transition((float)imu660ra_gyro_y - Gyro_Offset.Gyro_Ydata);
+    
     Gyro_corrZ = imu660ra_gyro_transition((float)imu660ra_gyro_z - Gyro_Offset.Gyro_Zdata);
+    filtered_z_gyro = Gyroscope_Filter(
+        z_gyro_buffer,  // Z轴专用缓冲区
+        z_weights,      // Z轴权重
+        GYRO_FILTER_SIZE,
+        &z_data_ptr,    // 指针地址
+        Gyro_corrZ
+    );
+    
     Acc_corrX = imu660ra_acc_transition((float)imu660ra_acc_x - Gyro_Offset.ACC_Xdata);
     Acc_corrY = imu660ra_acc_transition((float)imu660ra_acc_y - Gyro_Offset.ACC_Ydata);
     Acc_corrZ = imu660ra_acc_transition((float)imu660ra_acc_z - Gyro_Offset.ACC_Zdata);
@@ -225,6 +239,7 @@ void Gyroscope_Conut(void)
     if (Gyro_z_status == 1)
     {
         Gyro_z += imu660ra_gyro_transition((float)imu660ra_gyro_z - Gyro_Offset.Gyro_Zdata) * Gyroscope_time * 0.001;
+        test+=Gyroscope_time*Gyro_corrZ/16.4;
     }
 
     if (Acc_x_status == 1)
@@ -275,6 +290,10 @@ void Gyroscope_Clear(GYROSCOPE_MEASURE_TYPE measureType)
     }
 }
 
+
+
+
+
 /**
  * @brief 对陀螺仪的滑动窗口滤波
  * 
@@ -296,6 +315,6 @@ float Gyroscope_Filter(float data[], float data_weigh[], uint8 data_num, uint8 *
             index += data_num;
         data_out += data[index] * data_weigh[index];
     }
-    *data_pointer = ((*data_pointer)++) % data_num;
+    *data_pointer = (*data_pointer + 1) % data_num;
     return data_out;
 }

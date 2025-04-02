@@ -9,6 +9,8 @@ void my_ipc_callback(int receive_data)
 //    printf("receive data:%d\r\n", receive_data);        // 将接收到的数据打印到串口 
 //    printf("Diff:%d\r\n", Diff_Data);
 }
+
+
 //------------------------------------------------------------
 //状态机
 uint8 Monitor_readFinishStatus = 0;

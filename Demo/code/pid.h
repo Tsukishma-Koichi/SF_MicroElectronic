@@ -3,10 +3,8 @@
 
 #include "zf_common_headfile.h"
 #include "headfile.h"
+#include <math.h>
 
-//uint16 PID_velo1(int reality, int target);
-//uint16 PID_velo2(int reality, int target);
-//
 
 //PID类型
 typedef enum{
@@ -27,12 +25,29 @@ struct STRUCT_PID {
         float sumLimit;
         float utLimit;
 };
+        
+//PID结构体
+struct STRUCT_PD {
+        float kP1;
+        float kD1;
+        float kP2;
+        float kD2;
+        float preError;
+        float ppreError;
+        float ut;
+        float utLimit;
+};
 
 typedef struct STRUCT_PID PID;
 void PID_Init(PID* p);
 void PID_SetParameter(PID* p, float setP, float setI, float setD, float pLimit, float coLimit, float boost);
 void PID_PostionalPID(PID* p, float target, float cur);
 void PID_IncrementalPID(PID *p, float target, float cur);
+
+typedef struct STRUCT_PD PD;
+void PD_Init(PD *p);
+void PID_2PD(PD *p, float target, float cur);
+void PD_SetParameter(PD *p, float P1, float P2, float D1, float D2, float coLimit, float boost);
 
 
 #endif

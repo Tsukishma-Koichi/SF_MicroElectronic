@@ -44,7 +44,6 @@ void pit0_ch0_isr()
 {
     interrupt_global_enable(0); // ¿ªÆôÖÐ¶ÏÇ¶Ì×
     pit_isr_flag_clear(PIT_CH0);
-    
 //    Gyroscope_GetData();
   
     pit_00_state = 1;
@@ -67,7 +66,6 @@ void pit0_ch1_isr()
 void pit0_ch2_isr()
 {
     pit_isr_flag_clear(PIT_CH2);
-	
 	
 	pit_02_state = 1;
 	

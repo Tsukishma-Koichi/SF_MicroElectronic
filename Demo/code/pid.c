@@ -91,3 +91,54 @@ void PID_IncrementalPID(PID *p, float target, float cur)
     p->ppreError = p->preError;
     p->preError = error;
 }
+
+/**
+ * @brief           2PD初始化
+ * @param p         待初始化的指针
+ * @return          NULL
+ */
+void PD_Init(PD *p)
+{
+    p->kP1 = 0.0;
+    p->kD1 = 0.0;
+    p->kP2 = 0.0;
+    p->kD2 = 0.0;
+    p->preError = 0.0;
+    p->ppreError = 0.0;
+    p->ut = 0.0;
+    p->utLimit = 0.0;
+}
+
+/**
+ * @brief               PPD
+ * @param   p           用来工作的PID参数
+ * @param   target      目标值
+ * @param   cur         当前值
+ */
+void PID_2PD(PD *p, float target, float cur)
+{
+    float error = target - cur;
+    // 数据进行计算
+    
+    p->ut = p->kP1 * error + p->kP2 * fabs(error) * error + p->kD1 * (error - p->preError) + p->kD2 * filtered_z_gyro;
+    
+    // 进行修正限幅
+    p->ut = p->ut > p->utLimit ? p->utLimit : p->ut;
+    p->ut = p->ut < -p->utLimit ? -p->utLimit : p->ut;
+    // 进行数据更新
+    p->preError = error;
+}
+
+/**
+ * @brief               整体设置p的各项参数
+ * @param coLimit       修正限幅
+ * @return              NULL
+ */
+void PD_SetParameter(PD *p, float P1, float P2, float D1, float D2, float coLimit, float boost)
+{
+    p->utLimit = coLimit;
+    p->kP1 = P1;
+    p->kP2 = P2;
+    p->kD1 = D1;
+    p->kD2 = D2;
+}

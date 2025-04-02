@@ -226,7 +226,7 @@ uint8 imu660ra_init (void)
             // 如果程序在输出了断言信息 并且提示出错位置在这里
             // 那么就是 imu660ra 自检出错并超时退出了
             // 检查一下接线有没有问题 如果没问题可能就是坏了
-            zf_log(0, "imu660ra self check error.");
+//            zf_log(0, "imu660ra self check error.");
             return_state = 1;
             break;
         }
@@ -241,7 +241,7 @@ uint8 imu660ra_init (void)
             // 如果程序在输出了断言信息 并且提示出错位置在这里
             // 那么就是 imu660ra 配置初始化文件出错了
             // 检查一下接线有没有问题 如果没问题可能就是坏了
-            zf_log(0, "imu660ra init error.");
+//            zf_log(0, "imu660ra init error.");
             return_state = 1;
             break;
         }

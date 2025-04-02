@@ -2,9 +2,15 @@
 #define CODE_OPHOT_GYROSCOPE_H_
 
 #include "zf_common_headfile.h"
-//#include "filter.h"
+#include "headfile.h"
 
-#define GYRO_FILTER_MAX (10) //陀螺仪滤波序列大小
+// 定义滤波器参数
+#define GYRO_FILTER_SIZE 10  // 缓冲区长度（数据点数）
+extern float z_gyro_buffer[GYRO_FILTER_SIZE];
+extern float z_weights[GYRO_FILTER_SIZE];
+extern uint8_t z_data_ptr;
+
+extern float filtered_z_gyro;
 
 //------------------------------数据类型定义------------------------------
 //使用的陀螺仪类型
@@ -49,6 +55,7 @@ extern float Gyro_corrZ;       //陀螺仪z值 - 角速度
 extern float Acc_corrX;        //加速度x值 - 加速度
 extern float Acc_corrY;        //加速度y值 - 加速度
 extern float Acc_corrZ;        //加速度z值 - 加速度
+extern float test;
 
 //------------------------------函数------------------------------
 void Gyroscope_Init(GYROSCOPE_TYPE device, uint16 time);

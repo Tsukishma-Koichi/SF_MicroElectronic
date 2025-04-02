@@ -106,7 +106,7 @@ void mean_filter(uint8 *src, uint8 *dst) {
 extern uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];    // 边界及中线数组
 int seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
 {
-    int left, right, mid = MT9V03X_W/2, index = 0, length = 60, tan;
+    int left, right, mid = MT9V03X_W/2, index = 0, length = 60, tan, sum_offset = 0;
     // 寻白
     left = right = mid;
     while(right < MT9V03X_W) {
@@ -144,12 +144,14 @@ int seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
             else right ++;
         }
         mid = (right + left) / 2;
+        sum_offset += mid - MT9V03X_W/2; 
         M_boundary[index] = mid;
         ips114_draw_point(mid, i, RGB565_BROWN); 
         index ++;
     }
-    tan = (M_boundary[index-1] - MT9V03X_W/2) * 100 / length;
-    return tan;
+    //tan = (M_boundary[index-1] - MT9V03X_W/2) * 100 / length;
+    //return tan;
+    return sum_offset;
 }
 
 
