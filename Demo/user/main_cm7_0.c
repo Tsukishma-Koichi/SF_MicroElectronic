@@ -59,6 +59,8 @@ int main(void)
             Gyroscope_GetData();
             Encoder_SpeedRead();    
             Monitor_ReRead();
+//            Motor_SetSpeed(MOTOR_2, 3000);
+//                        Motor_SetSpeed(MOTOR_1, 3000);
             
             Motor_Diff();
             Motor1_PIDwork();

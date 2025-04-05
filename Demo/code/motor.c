@@ -7,7 +7,7 @@ PID Motor2_D_PID;
 PID Motor_Diff_PID;
 PD Motor_Diff_PD;
 
-float Motor_target = 75;     //直线75
+float Motor_target = 50;     //直线75
 float Motor1_target = 0;   // 电机1PID目标（编码器读数）
 float Motor2_target = 0;   // 电机2PID目标（编码器读数）
 

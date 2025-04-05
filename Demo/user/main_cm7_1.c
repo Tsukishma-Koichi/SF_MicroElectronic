@@ -88,8 +88,8 @@ int main(void)
         if (pit_00_state)
         {
             //threshold = otsu_threshold((uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);
-            threshold = 130;
-//            printf("threshold = %d\r\n", threshold);
+            threshold = 200;
+            //printf("threshold = %d\r\n", threshold);
             pit_00_state = 0;                                                      // 清空周期中断触发标志位
         }
     }

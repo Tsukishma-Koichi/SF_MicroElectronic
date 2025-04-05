@@ -144,13 +144,16 @@ int seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
             else right ++;
         }
         mid = (right + left) / 2;
-        sum_offset += mid - MT9V03X_W/2; 
+        if (index >= 45 || index <= 15) sum_offset += mid - MT9V03X_W/2; 
         M_boundary[index] = mid;
         ips114_draw_point(mid, i, RGB565_BROWN); 
         index ++;
     }
     //tan = (M_boundary[index-1] - MT9V03X_W/2) * 100 / length;
     //return tan;
+    sum_offset = sum_offset/10;
+    sum_offset = (sum_offset>500) ? 500 : sum_offset;
+    sum_offset = (sum_offset<-500) ? 500 : sum_offset;
     return sum_offset;
 }
 

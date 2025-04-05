@@ -61,13 +61,13 @@ void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 #define MOTOR_Diff_PID_SL            (40)
 #define MOTOR_Diff_PID_UL            (150)
 //²îËÙË«PD
-#define MOTOR_Diff_PD_P1             (0.03)
+#define MOTOR_Diff_PD_P1             (0.12)
 #define MOTOR_Diff_PD_P2             (0)
-#define MOTOR_Diff_PD_D1             (3.5)
-#define MOTOR_Diff_PD_D2             (0.008)
+#define MOTOR_Diff_PD_D1             (10)
+#define MOTOR_Diff_PD_D2             (0)
 #define MOTOR_Diff_PD_UL             (350)
 
-#define MOTOR_Diff_threshold            (500)
+#define MOTOR_Diff_threshold            (5)
 
 
 
