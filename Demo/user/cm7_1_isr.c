@@ -35,6 +35,7 @@
 
 
 #include "zf_common_headfile.h"
+#include "headfile1.h"
 // **************************** PITÖÐ¶Ïº¯Êý ****************************
 extern uint8 pit_00_state;
 void pit0_ch0_isr()
@@ -49,12 +50,13 @@ void pit0_ch0_isr()
 	
 }
 
+extern uint8 pit_01_state;
 void pit0_ch1_isr()
 {
     pit_isr_flag_clear(PIT_CH1);
 	
 	
-	
+	pit_01_state = 1;
 	
 }
 

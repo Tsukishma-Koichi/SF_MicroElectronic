@@ -1441,7 +1441,7 @@
             <name>$PROJ_DIR$\..\..\code\gyro.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\code\headfile.h</name>
+            <name>$PROJ_DIR$\..\..\code\headfile0.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\code\monitor_re.c</name>

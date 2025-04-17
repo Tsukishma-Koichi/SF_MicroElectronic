@@ -34,34 +34,49 @@
 ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"
-#include "common.h"
-#include "view_fun.h"
+#include "headfile1.h"
 // 打开新的工程或者工程移动了位置务必执行以下操作
 // 第一步 关闭上面所有打开的文件
 // 第二步 project->clean  等待下方进度条走完
 
 // 本例程是开源库空工程 可用作移植或者测试各类内外设
-// 本例程是开源库空工程 可用作移植或者测试各类内外设
-// 本例程是开源库空工程 可用作移植或者测试各类内外设
 
 // **************************** 代码区域 ****************************
 
 
+
+//int m7_1_data;          //发给0核数据
+
+/* ================================
+   定义 M7_0 数据数组   
+   序号 0：        位置偏移    
+   序号 1：        元素状态位   
+   序号 2：        左右区分    左 1  右 2  不区分 0  
+   序号 3：        固定打角
+   序号 4：        待定
+==================================*/
+
+int search_line_mode = NORMAL_MODE;
+//int search_line_mode = LEFT_MODE;
+
 uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];             // 边界及中线数组
 
-static uint8 filted_buffer[188*120];      // 滤波后缓冲区
+static uint8 filted_buffer[188*120];      // 滤波后缓冲区   
 static uint8 binary_buffer[188*120];      // 二值化缓冲区
 uint8 img[MT9V03X_H][MT9V03X_W];          // 预处理后图像
 
-uint8 threshold = 128;                    // 二值化阈值
-int send_data = 0;                        // 预传递参数
-uint8 pit_00_state;                       // 00中断标志位
+uint8 threshold = 200;                    // 二值化阈值初始化
 
-int flag = 10;
+ELEMENT_STATE E;       // 元素状态结构体声明
+ROUND R;            // 环岛状态结构体声明
+ 
 
 int main(void)
 {
-    Main_Init();       
+    Main_Init();                  // 总初始化
+    
+    State_Clear(&E);              // 元素状态初始化
+    Round_Clear(&R);              // 环岛状态初始化
     
     while(true)
     {
@@ -71,68 +86,31 @@ int main(void)
             mt9v03x_finish_flag = 0;
             
             // 图像处理
-            //mean_filter((uint8 *)mt9v03x_image, (uint8 *)filted_buffer);               // 图像滤波
-            
+            mean_filter((uint8 *)mt9v03x_image, (uint8 *)filted_buffer);               // 图像滤波
             image_binarize((uint8 *)mt9v03x_image, binary_buffer, MT9V03X_W, MT9V03X_H, threshold);             // 二值化
+            memcpy(img[0], &binary_buffer[0], MT9V03X_IMAGE_SIZE);               // 图像备份再发送，以避免图像撕裂
             
-            memcpy(img[0], &binary_buffer[0], MT9V03X_IMAGE_SIZE);               // 在发送前将图像备份再进行发送，这样可以避免图像出现撕裂的问题
+            // 扫线
+            if(search_line_mode == NORMAL_MODE) mid_seek_boundary(img);
+            else LR_seek_boundary(img);
             
-            send_data = seek_boundary(img);                  // 扫线
+            // 元素识别
+            Roundabout_detect(img, &R, &E);
+            //StartStopZone_detect(&E);
+            Bend_detect(&E);
             
-            ipc_send_data(send_data);                        // 发送数据给核心M7_0
-       
+//            // 发送位置偏差
+            m7_0_data[0] = get_offset(&E);     
+//            printf("L:%d\nM:%d\n", L_boundary[20], MT9V03X_W/2);
+//            printf("FLAG:%d\nM7:%d\n", search_line_mode, m7_0_data[0]);
+            SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
+//            ipc_send_data(m7_1_data);
+            
+            // 显示图像
             ips114_displayimage03x((const uint8 *)img, MT9V03X_W, MT9V03X_H);    //显示图像
+//            get_angel();
+//            printf("G:%f\n", Gyro_z);
         }
-        
-        // 每隔5秒重算二值化阈值
-        if (pit_00_state)
-        {
-            //threshold = otsu_threshold((uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);
-            threshold = 200;
-            //printf("threshold = %d\r\n", threshold);
-            pit_00_state = 0;                                                      // 清空周期中断触发标志位
-        }
+       //get_threshold();          // 计算二值化阈值
     }
 }
-
-
-
-
-
-
-//int main(void)
-//{
-//    clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
-//    debug_info_init();                  // 调试串口信息初始化
-//     
-//    ips114_init();
-//    ips114_show_string(0, 0, "mt9v03x init.");
-//    while(1)
-//    {
-//        if(mt9v03x_init())
-//            ips114_show_string(0, 16, "mt9v03x reinit.");
-//        else
-//            break;
-//        system_delay_ms(500);                                                   // 短延时快速闪灯表示异常
-//    }
-//    ips114_show_string(0, 16, "init success.");
-//    
-//    
-//    // 此处编写用户代码 例如外设初始化代码等
-//    while(true)
-//    {
-//        // 此处编写需要循环执行的代码
-//
-//        if(mt9v03x_finish_flag)
-//        {
-//            ips114_displayimage03x((const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H);                             // 显示原始图像
-////            ips114_show_gray_image(0, 0, (const uint8 *)mt9v03x_image, MT9V03X_W, MT9V03X_H, 240, 135, 64);       // 显示灰度图像
-//            mt9v03x_finish_flag = 0;
-//        }
-//      
-//      
-//        // 此处编写需要循环执行的代码
-//    }
-//}
-
-// **************************** 代码区域 ****************************

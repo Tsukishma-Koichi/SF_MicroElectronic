@@ -1,5 +1,5 @@
 #include "zf_common_headfile.h"
-#include "headfile.h"
+#include "headfile0.h"
 
 // 打开新的工程或者工程移动了位置务必执行以下操作
 // 第一步 关闭上面所有打开的文件
@@ -8,39 +8,44 @@
 
 // **************************** 代码区域 ****************************
 
+
+
 #define PIT0                             (PIT_CH0 )                             // 使用的周期中断编号
 #define PIT1                             (PIT_CH1 )
 #define PIT2                             (PIT_CH2 )
 
 #define KEY1                    (P20_0)
-//#define KEY2                    (P20_1)
+#define KEY2                    (P20_1)
+#define KEY3                    (P20_2)
 uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
 uint8 pit_02_state = 0;
 
+uint8 key2_state = 0;
 
 int main(void)
 {
     clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
     debug_init();                   // 调试串口信息初始化
     OSC_Init();
-    pit_ms_init(PIT0, 5);
+    pit_ms_init(PIT0, 20);
     pit_ms_init(PIT1, 100);
     pit_ms_init(PIT2, 500);
-    WLUART_Init();
+//    WLUART_Init();
+    UART_Init();
     Encoder_Init();
     Motor_Init();
-    UART_Init();
     
     
-    SCB_DisableDCache(); // 关闭DCashe
-    ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口2 填写中断回调函数
+//    SCB_DisableDCache(); // 关闭DCashe
+//    ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口1 填写中断回调函数
 
-    
-    imu660ra_init();
-    Gyroscope_Init(GYROSCOPE_IMU660RA, 5); // 初始化陀螺仪，设置时间间隔为 5ms
+    //imu660ra_init();
+   // Gyroscope_Init(GYROSCOPE_IMU660RA, 20); // 初始化陀螺仪，设置时间间隔为 5ms
     gpio_init(KEY1, GPI, GPIO_HIGH, GPI_PULL_UP);               // 初始化 KEY1 输入 默认高电平 上拉输入
-    
+    gpio_init(KEY2, GPI, GPIO_HIGH, GPI_PULL_UP);
+    gpio_init(KEY3, GPI, GPIO_HIGH, GPI_PULL_UP);
+
     // PID初始化
     Motor_PID_Init();  
     
@@ -54,25 +59,32 @@ int main(void)
 
     while(true)
     {
-        if(pit_00_state)        //5ms 编码器|电机|陀螺仪
+        
+        SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
+
+        if(pit_00_state)        //20ms 编码器|电机|陀螺仪
         {
-            Gyroscope_GetData();
-            Encoder_SpeedRead();    
+//            Gyroscope_Begin(GYROSCOPE_GYRO_Z);
+//            Gyroscope_Conut();
+            //Gyroscope_GetData();
+            Encoder_SpeedRead();
             Monitor_ReRead();
-//            Motor_SetSpeed(MOTOR_2, 3000);
-//                        Motor_SetSpeed(MOTOR_1, 3000);
-            
+
             Motor_Diff();
+            
             Motor1_PIDwork();
             Motor2_PIDwork();
+            
+//            Motor_SetSpeed(MOTOR_2, 3000);
+//            Motor_SetSpeed(MOTOR_1, 3000);
             
             pit_00_state = 0;
         }
         
         if(pit_01_state)        //100ms 虚拟示波器
         {
-            OSC_Send(0, Monitor_Data, Motor1_target, Motor2_target, Motor_target, Encoder_1Data, Encoder_2Data, filtered_z_gyro);
-//            
+            OSC_Send((int)Gyro_z, Monitor_Data, Motor1_target, Motor2_target, Motor_target, Encoder_1Data, Encoder_2Data, filtered_z_gyro);
+
             pit_01_state = 0;
         }
         
@@ -81,10 +93,7 @@ int main(void)
             
             pit_02_state = 0;
         }
-        
 //        system_delay_ms(50);
-      
-
     }
 }
 

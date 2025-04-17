@@ -2,8 +2,8 @@
 #define CODE_OPHOT_GYROSCOPE_H_
 
 #include "zf_common_headfile.h"
-#include "headfile.h"
 
+#include <math.h>
 // 定义滤波器参数
 #define GYRO_FILTER_SIZE 10  // 缓冲区长度（数据点数）
 extern float z_gyro_buffer[GYRO_FILTER_SIZE];

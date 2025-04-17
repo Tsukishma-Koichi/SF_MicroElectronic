@@ -130,7 +130,7 @@ void Gyroscope_Begin(GYROSCOPE_MEASURE_TYPE measureType)
         if (Gyro_z_status == 0)
         {
             Gyro_z_status = 1;
-            Gyro_z = 0.0;
+//            Gyro_z = 0.0;
         }
     }
     else if (measureType == GYROSCOPE_ACC_X)
@@ -238,8 +238,8 @@ void Gyroscope_Conut(void)
 
     if (Gyro_z_status == 1)
     {
-        Gyro_z += imu660ra_gyro_transition((float)imu660ra_gyro_z - Gyro_Offset.Gyro_Zdata) * Gyroscope_time * 0.001;
-        test+=Gyroscope_time*Gyro_corrZ/16.4;
+      if (fabs(filtered_z_gyro) >= 5)
+        Gyro_z += Gyroscope_time * filtered_z_gyro * 0.01;
     }
 
     if (Acc_x_status == 1)

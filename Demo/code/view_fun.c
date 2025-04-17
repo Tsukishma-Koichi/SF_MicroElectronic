@@ -1,6 +1,12 @@
-#include "headfile.h"
+#include "headfile1.h"
+#include <math.h>
 
+#pragma location = 0x28001000                    // 将下面这个数组定义到指定的RAM地址，便于其他核心直接访问(开源库默认在 0x28001000 地址保留了8kb的空间用于数据交互)                                                                  
+int m7_0_data[5] = {0, 0, 0, 0, 0};   
+
+//   0 黑     255 白
 // *************************** 图 像 预 处 理 ***************************
+
 
 // otsu大津法算阈值
 uint8 otsu_threshold(uint8 *image_data, uint32 width, uint32 height) 
@@ -102,30 +108,58 @@ void mean_filter(uint8 *src, uint8 *dst) {
 }
 
 
-// 获取边界数组与航偏角
-extern uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];    // 边界及中线数组
-int seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
+// 寻白
+uint8 seek_white(uint8 mid, uint8 row, uint8 img[MT9V03X_H][MT9V03X_W])
 {
-    int left, right, mid = MT9V03X_W/2, index = 0, length = 60, tan, sum_offset = 0;
-    // 寻白
-    left = right = mid;
-    while(right < MT9V03X_W) {
-        if (img[MT9V03X_H-1][left] == 255) {
-            mid = left;
+    uint8 left = mid;
+    uint8 right = mid;
+    while(right < MT9V03X_W && left > 0) {
+        if (img[row][left] == 255) {
+            mid = left;   
             break;
         }
-        if (img[MT9V03X_H-1][right] == 255) {
+        if (img[row][right] == 255) {
             mid = right;
             break;
         }
         left --;
         right++;
     }
+    return mid;
+}
+
+
+// =========== 获取边界数组与位置偏差 =========== //
+
+int bend_offset;
+
+//  中点继承法巡线
+extern uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];    // 左右边界及中线数组
+extern int search_line_mode;
+uint8 valid_length= 0;
+
+void mid_seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
+{
+    uint8 left, right, mid = MT9V03X_W/2;        // 左 右 中
+    uint8 index = 0, length = 120, temp;        // 数组序列   扫线长度 
+    valid_length= 0;              
+    
+    // 寻白  处理近处阴影
+    for(int i = MT9V03X_H-1; i >= MT9V03X_H-15; i--) {
+        mid = seek_white(mid, i, img);
+        if (img[i][mid] == 255) {  
+            temp = index;
+            break;  
+        }
+        else index ++;
+    }
+    
     // 扫线
-    for (int i = MT9V03X_H-1; i >= MT9V03X_H - length; i--)
+    for (int i = MT9V03X_H-1-temp; i > MT9V03X_H - length; i --)
     {
-        left = right = mid;
-        while(left >= 0)
+        left = mid;
+        right = mid;
+        while(left > 0)
         {
             if (img[i][left] == 0) {
                 L_boundary[index] = left;
@@ -144,55 +178,401 @@ int seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
             else right ++;
         }
         mid = (right + left) / 2;
-        if (index >= 45 || index <= 15) sum_offset += mid - MT9V03X_W/2; 
         M_boundary[index] = mid;
+        if(temp == index) {
+            for(int j = 0; j < temp; j++) {
+                M_boundary[j] = mid;
+                L_boundary[j] = left;
+                R_boundary[j] = right;
+                ips114_draw_point(mid, MT9V03X_H - 1 - j, RGB565_BROWN); 
+                ips114_draw_point(left, MT9V03X_H - 1 - j, RGB565_BLUE); 
+                ips114_draw_point(right, MT9V03X_H - 1 - j, RGB565_GREEN); 
+            }
+        }
+        if(mid == left && mid == right && valid_length == 0) {
+            valid_length = index;
+        }
         ips114_draw_point(mid, i, RGB565_BROWN); 
         index ++;
     }
-    //tan = (M_boundary[index-1] - MT9V03X_W/2) * 100 / length;
-    //return tan;
-    sum_offset = sum_offset/10;
-    sum_offset = (sum_offset>500) ? 500 : sum_offset;
-    sum_offset = (sum_offset<-500) ? 500 : sum_offset;
-    return sum_offset;
 }
+
+
+// 边线继承法巡线
+void LR_seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
+{
+    uint8 left = MT9V03X_W/2, right = MT9V03X_W/2, preleft, preright;
+    uint8 index = 0, mid = MT9V03X_W/2, temp = 15;
+    valid_length = 0;            // 有效长度
+    
+    // 寻白  处理近处阴影
+    for(int i = MT9V03X_H-1; i >= MT9V03X_H-temp; i--) {
+        mid = seek_white(mid, i, img);   
+        if (img[i][mid] == 255) {
+            left = mid;
+            right = mid;
+            temp = index;  
+            break;  
+        }  
+        else index ++;  
+    }
+    
+    // 获得左右边线生长起点
+    while(left > 0) {
+        if (img[MT9V03X_H-1-temp][left] == 0) {
+             L_boundary[temp] = left;
+             ips114_draw_point(left, MT9V03X_H-1-temp, RGB565_BLUE); 
+             break;
+         }
+         else left --;
+    }
+    while(right < MT9V03X_W) {
+        if (img[MT9V03X_H-1-temp][right] == 0) {
+            R_boundary[temp] = right;
+            ips114_draw_point(right, MT9V03X_H-1-temp, RGB565_RED); 
+            break;
+        }
+        else right ++;
+    }
+    mid = (left + right) / 2;
+    preleft = left;
+    preright = right;
+    for(int j = 0; j < temp; j++) {
+        M_boundary[j] = mid;
+        L_boundary[j] = left;
+        R_boundary[j] = right;
+        ips114_draw_point(mid, MT9V03X_H - 1 - j, RGB565_BROWN); 
+        ips114_draw_point(left, MT9V03X_H - 1 - j, RGB565_BLUE); 
+        ips114_draw_point(right, MT9V03X_H - 1 - j, RGB565_RED); 
+    }
+    
+    // 扫线
+    for (int i = MT9V03X_H-2-temp; i >= 50; i --) {
+        index ++;
+        if (valid_length == 0) {
+            while(left > 0 && left < MT9V03X_W) {
+              if(img[i][preleft] == 0) {
+                  left ++;
+                  if (img[i][left] == 255) {
+                      preleft = left-1;
+                      break;
+                  }
+              }
+              else {
+                  left --;
+                  if (img[i][left] == 0) {
+                      preleft = left;
+                      break;
+                  }
+              }
+            }
+            while(right > 0 && right < MT9V03X_W) {
+                if(img[i][preright] == 0) {
+                      right --;
+                      if (img[i][right] == 255) {
+                          preright = right+1;
+                          break;
+                      }
+                }
+                else {
+                   right ++;
+                   if (img[i][right] == 0) {
+                       preright = right;
+                       break;
+                   }
+                }
+            }
+//            printf("L%dR%d", left, right);
+//            if(left >= right) valid_length = index; 
+        }
+        L_boundary[index] = preleft;
+        R_boundary[index] = preright;
+        M_boundary[index] = (preleft + preright) / 2;
+        ips114_draw_point(preright, i, RGB565_RED); 
+        ips114_draw_point(preleft, i, RGB565_BLUE); 
+        ips114_draw_point(M_boundary[index], i, RGB565_BROWN); 
+    }
+    valid_length = index;
+}
+
+
+// 计算位置偏差值
+int get_offset(ELEMENT_STATE *E)
+{
+    int sum_offset= 0;      // 返回参数
+    for (int i = 0;i<= 80;i ++){
+        if(i <= 50 && i >= 20) {// || (i >= 45 && i <= 60)) {
+            switch(search_line_mode) 
+            {
+                case NORMAL_MODE:
+                  {sum_offset += M_boundary[i] -  MT9V03X_W/2;} break;
+                case 1:
+                  {sum_offset +=  L_boundary[i] -  MT9V03X_W/2;} break;
+                case RIGHT_MODE:
+                  {sum_offset += 20 + R_boundary[i] -  MT9V03X_W/2;} break;
+            }      
+        }
+        
+    }
+
+//    printf("FLAG:%d\nVL:%d", search_line_mode, valid_length);
+    if(E->Bend_Flag == 1) return bend_offset;
+    return sum_offset/5;
+}
+
+
+
 
 
 
 // ************************** 元 素 识 别 ***************************
 
-// 环岛
-uint8 Roundabout_detect()
+void State_Clear(ELEMENT_STATE *E)
 {
-    
+    if(State_Check(E)) {
+        ips114_clear();
+        E->Round_Flag = 0;
+        E->Bend_Flag = 0;
+        E->SSZone_Flag = 0;
+        E->OR_Flag = 0;
+        m7_0_data[1] = 0;
+        m7_0_data[2] = 0;
+    }
 }
 
-// 启停区
-uint8 StartStopZone_detect()
+
+uint8 State_Check(ELEMENT_STATE *E)
 {
-  
+  if(E->Round_Flag == 1) {
+      ips114_show_string(190, 10, "Round");
+      return ROUNDA;
+  }
+  else if(E->Bend_Flag >= 1) {
+      ips114_show_string(190, 10, "Bend");
+      return BEND;
+  }
+  else if(E->SSZone_Flag >= 1) {
+      ips114_show_string(190, 10, "SSZone");
+      return SSZ;
+  }
+  else if(E->OR_Flag == 1) {
+      ips114_show_string(190, 10, "OR");
+      return OR;
+  }
+  else return 0;
 }
 
-// 直角
-uint8 Bend_detect()
-{
+// -------------------- 环 岛 --------------------
 
+void Round_Clear(ROUND *Round)
+{
+    Round->R_Enter_Flag = 0;
+    Round->L_Enter_Flag = 0;
+    Round->R_In_Flag = 0;
+    Round->L_In_Flag = 0;
+    Round->R_Out_Flag = 0;
+    Round->L_Out_Flag = 0;
+    Round->Finish_Flag= 0;
 }
 
-// 虚线
+
+void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_STATE*E)
+{
+    // 防止元素冲突
+    if(State_Check(E) == 0 || State_Check(E) == ROUNDA)
+    {
+        // ===================== 入环判断 ===================== 
+        int jump_L = 6;          // 跳变下限
+        int jump_H = 24;         // 跳变上限
+        int White_th = 12;        // 白线阈值
+        
+        if(Round->R_Enter_Flag == 0 && Round->L_Enter_Flag == 0) 
+        {   
+            int cnt = 0;         // 白点计数器
+            for (int i = 1; i < valid_length; i ++) {
+                // 左环岛下角点检测
+                if(L_boundary[i-1] - L_boundary[i] > jump_L && L_boundary[i] - L_boundary[i+1] < jump_H) {
+                    for(int j = 1; j <= i; j ++) {
+                        if (img[MT9V03X_H-1-i+j][L_boundary[i]] == 255) cnt ++;
+                        else{ 
+                            cnt = 0;
+                            break;
+                        }
+                        if (cnt >= White_th) {
+                            Round->L_Enter_Flag = 1; 
+                            E->Round_Flag = 1;
+                            search_line_mode= LEFT_MODE;
+                            ips114_show_string(155, 115, "EnterLR");
+                            break;
+                        }
+                    }
+                    if (Round->R_Enter_Flag== 1) break;
+                } 
+                // 右环岛下角点检测
+                if(R_boundary[i] - R_boundary[i-1] > jump_L && R_boundary[i] - R_boundary[i-1] < jump_H) {
+                    for(int j = 1; j <= i; j ++) {
+                        if (img[MT9V03X_H-1-i+j][R_boundary[i]] == 255) cnt ++;
+                        else{ 
+                            cnt = 0;
+                            break;
+                        }
+                        if (cnt >= White_th) {
+//                            Round->R_Enter_Flag = 1; 
+                            E->Round_Flag = 1;
+                            search_line_mode= RIGHT_MODE;
+                            ips114_show_string(155, 115, "EnterRR");
+                            break;
+                        }
+                    }
+                    if (Round->L_Enter_Flag== 1) break;
+                } 
+            }
+        }
+        
+        // ===================== 环中判断 ===================== 
+        // 右环中
+        if(Round->R_Enter_Flag == 1 && Round->R_In_Flag == 0) 
+        {
+            get_angel();
+//            printf("RI %f\r\n", Gyro_z);
+            if(Gyro_z <= -120) {
+                  search_line_mode= LEFT_MODE;
+                  Round->R_In_Flag = 1;
+            }
+        }
+        
+        // 左环中
+        if(Round->L_Enter_Flag == 1 && Round->L_In_Flag == 0)
+        {
+            get_angel();
+//            printf("LI %f\r\n", Gyro_z);
+            if(Gyro_z >= 120) {
+                  search_line_mode= RIGHT_MODE;
+                  Round->L_In_Flag = 1;
+            }
+        }
+        
+        // ===================== 出环判断 ===================== 
+        if(Round->R_In_Flag == 1) 
+        {
+            get_angel();
+//            printf("RO %f\r\n", Gyro_z);
+            if(Gyro_z <= -600) {
+                  search_line_mode= NORMAL_MODE;
+                  Round->R_Out_Flag = 1;
+                  Round_Clear(Round);
+                  State_Clear(E);
+                  ips114_clear();
+            }
+            
+        }
+        if(Round->L_In_Flag == 1)
+        {
+            get_angel();
+//            printf("LO %f\r\n", Gyro_z);
+            if(Gyro_z >= 600) {
+                  search_line_mode= NORMAL_MODE;
+                  Round->L_Out_Flag = 1;
+                  Round_Clear(Round);
+                  State_Clear(E);
+                  ips114_clear();
+            }
+        }
+    }
+}
+
+
+
+// -------------------- 启 停 区 --------------------
+ 
+void StartStopZone_detect(ELEMENT_STATE*E)
+{
+    if(State_Check(E) == 0 || State_Check(E) == SSZ) {
+        int jump_th = 20;               //跳变阈值
+        uint8 L_jump = 0, R_jump = 0;   //跳变所在行
+        for (int i = 1; i < valid_length; i++)
+        {
+            if (L_boundary[i-1] - L_boundary[i] >= jump_th) L_jump = i;
+            if (L_boundary[i] - L_boundary[i-1] >= jump_th) R_jump = i;
+        }
+        if (abs(L_jump - R_jump) <= 5 && L_jump != 0 && R_jump != 0) {
+            E->SSZone_Flag = 1;
+            m7_0_data[1] = SSZ;
+            ips114_show_string(155, 115, "StopZone");
+        }
+        else State_Clear(E);
+    }
+}
+
+
+//  -------------------- 直 角  ------------------- 
+
+void Bend_detect(ELEMENT_STATE*E)
+{
+    if(State_Check(E) == 0 || State_Check(E) == BEND) {
+        int L_flag = 0, R_flag = 0;  
+        int jump_th = 25;
+        if(valid_length< 45 && valid_length> 20) {
+            for (int i = 2; i < valid_length; i++) 
+            {
+                if(L_boundary[i-2] - L_boundary[i] >= jump_th) L_flag = i;
+                if(R_boundary[i] - R_boundary[i-2] >= jump_th) R_flag = i;
+            }
+        }
+        if((L_flag == 0 && R_flag == 0) || (L_flag > 0 && R_flag > 0)) {
+            State_Clear(E);
+        }
+        else if(L_flag > 0) {
+            if(abs(R_boundary[L_flag-1] - R_boundary[0]) <= 8) {
+                ips114_show_string(155, 115, "LeftBend");
+                E->Bend_Flag = 1;
+                m7_0_data[1] = BEND;
+                m7_0_data[2] = LEFT;
+                bend_offset = L_flag * (M_boundary[L_flag] - MT9V03X_W / 2) / 2;
+            }
+        }
+        else{
+            if(abs(L_boundary[L_flag-1] - L_boundary[0]) <= 8) {
+                ips114_show_string(155, 115, "RightBend");
+                E->Bend_Flag = 1;
+                m7_0_data[1] = BEND;
+                m7_0_data[2] = RIGHT;
+                bend_offset = R_flag * (M_boundary[R_flag] - MT9V03X_W / 2) / 2;
+            }
+        }
+    }
+}
+
+/*
+void Bend_dedect(ELEMENT_STATE *E)
+{
+  if(State_Check(E) == 0 || State_Check(E) == BEND) {
+      
+  }
+}*/
+
+
+//  --------------------  虚 线 -------------------- 
+
 uint8 DashedLine_detect()
 {
-
+    return 0;
 }
 
-// 断路
-uint8 OpenRoad_detect()
+
+
+//  --------------------  断 路 -------------------- 
+
+uint8 OpenRoad_detect(ELEMENT_STATE*E)
 {
-
+    if(State_Check(E) == 0 || State_Check(E) == OR) {
+        
+    }
+    return 0;
 }
 
 
-
+//
 
 
 

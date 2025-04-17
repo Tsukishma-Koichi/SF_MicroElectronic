@@ -6,8 +6,9 @@ PID Motor1_D_PID;
 PID Motor2_D_PID;
 PID Motor_Diff_PID;
 PD Motor_Diff_PD;
+PID Motor_Angle_PID;
 
-float Motor_target = 50;     //直线75
+float Motor_target = 75;   //直线75
 float Motor1_target = 0;   // 电机1PID目标（编码器读数）
 float Motor2_target = 0;   // 电机2PID目标（编码器读数）
 
@@ -68,14 +69,17 @@ void Motor_PID_Init(void)
 {
     PID_Init(&Motor1_PID);
     PID_Init(&Motor2_PID);
+    
 //    PID_Init(&Motor_Diff_PID);
     PD_Init(&Motor_Diff_PD);
+//    PID_Init(&Motor_Angle_PID);
     
     Motor1_PID_Set(MOTOR_PID_P, MOTOR_PID_I, MOTOR_PID_D, MOTOR_PID_SL, MOTOR_PID_UL, 1);
     Motor2_PID_Set(MOTOR_PID_P, MOTOR_PID_I, MOTOR_PID_D, MOTOR_PID_SL, MOTOR_PID_UL, 1);
     
 //    Motor_Diff_PID_Set(MOTOR_Diff_PID_P, MOTOR_Diff_PID_I, MOTOR_Diff_PID_D, MOTOR_Diff_PID_SL, MOTOR_Diff_PID_UL, 1);
     Motor_Diff_PD_Set(MOTOR_Diff_PD_P1, MOTOR_Diff_PD_P2, MOTOR_Diff_PD_D1, MOTOR_Diff_PD_D2, MOTOR_Diff_PD_UL, 1);
+//    Motor_Angle_PID_Set(MOTOR_Angle_PID_P, MOTOR_Angle_PID_I, MOTOR_Angle_PID_D, MOTOR_Angle_PID_SL, MOTOR_Angle_PID_UL, 1);
 }
 
 void Motor1_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost)
@@ -96,14 +100,12 @@ void Motor_Diff(void)
 {
     if (Monitor_Data > MOTOR_Diff_threshold)
     {
-//        PID_PostionalPID(&Motor_Diff_PID, 0, Monitor_Data);
         PID_2PD(&Motor_Diff_PD, 0, Monitor_Data);
         Motor1_target = Motor_target - Motor_Diff_PD.ut;
         Motor2_target = Motor_target + Motor_Diff_PD.ut;
     }
     else if (Monitor_Data < -MOTOR_Diff_threshold)
     {
-//        PID_PostionalPID(&Motor_Diff_PID, 0, -Monitor_Data);
         PID_2PD(&Motor_Diff_PD, 0, -Monitor_Data);
         Motor1_target = Motor_target + Motor_Diff_PD.ut;
         Motor2_target = Motor_target - Motor_Diff_PD.ut;
@@ -124,6 +126,39 @@ void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimi
 void Motor_Diff_PD_Set(float Kp1, float Kp2, float Kd1, float Kd2, float coLimit, float boost)
 {
     PD_SetParameter(&Motor_Diff_PD, Kp1, Kp2, Kd1, Kd2, coLimit, boost);
+}
+
+//角度
+/**
+ * @brief  角度环
+ *
+ */
+void Motor_Angle(uint8 Angle_target, uint8 Dir)
+{
+    if (Dir == RIGHT)
+    {
+        PID_PostionalPID(&Motor_Angle_PID, Angle_target, Gyro_z);
+        Motor1_target = Motor_target - Motor_Diff_PD.ut;
+        Motor2_target = Motor_target + Motor_Diff_PD.ut;
+    }
+    else if (Dir == LEFT)
+    {
+        PID_PostionalPID(&Motor_Angle_PID, Angle_target, -Gyro_z);
+        PID_2PD(&Motor_Diff_PD, 0, -Monitor_Data);
+        Motor1_target = Motor_target + Motor_Diff_PD.ut;
+        Motor2_target = Motor_target - Motor_Diff_PD.ut;
+    }
+    else if (Dir == 0)
+    {
+        Motor1_target = Motor_target;
+        Motor2_target = Motor_target;
+    }
+    
+}
+
+void Motor_Angle_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost)
+{
+    PID_SetParameter(&Motor_Angle_PID, K_p_set, K_i_set, K_d_set, pLimit, coLimit, boost);
 }
 
 /**

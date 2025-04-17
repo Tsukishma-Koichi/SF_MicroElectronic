@@ -1122,6 +1122,15 @@
             <name>$PROJ_DIR$\..\..\code\common.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\code\gyro.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\gyro.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\code\headfile1.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\code\view_fun.c</name>
         </file>
         <file>

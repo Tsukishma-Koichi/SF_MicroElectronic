@@ -2,7 +2,7 @@
 #define _MOTOR_H_
 
 #include "zf_common_headfile.h"
-#include "headfile.h"
+#include "headfile0.h"
 //      模块管脚            单片机管脚
 //      1DIR                P09_1 或者 P05_1
 //      1PWM                P09_0 或者 P05_0
@@ -61,14 +61,23 @@ void Motor_SetSpeed(MOTOR_PWM_enum motor, int16 speed);
 #define MOTOR_Diff_PID_SL            (40)
 #define MOTOR_Diff_PID_UL            (150)
 //差速双PD
-#define MOTOR_Diff_PD_P1             (0.12)
-#define MOTOR_Diff_PD_P2             (0)
-#define MOTOR_Diff_PD_D1             (10)
+#define MOTOR_Diff_PD_P1             (0.15)
+#define MOTOR_Diff_PD_P2             (0.00005)
+#define MOTOR_Diff_PD_D1             (1.2)
 #define MOTOR_Diff_PD_D2             (0)
-#define MOTOR_Diff_PD_UL             (350)
+#define MOTOR_Diff_PD_UL             (150)
 
-#define MOTOR_Diff_threshold            (5)
+#define MOTOR_Diff_threshold            (20)
 
+//角度环
+#define MOTOR_Angle_PID_P             (1)
+#define MOTOR_Angle_PID_I             (0)
+#define MOTOR_Angle_PID_D             (0)
+#define MOTOR_Angle_PID_SL            (40)
+#define MOTOR_Angle_PID_UL            (150)
+
+#define MOTOR_ANGLE_1                 (45)
+#define MOTOR_ANGLE_2                 (30)
 
 
 extern float Motor_target;
@@ -83,6 +92,10 @@ void Motor_pidClear(void);
 void Motor_Diff(void);
 void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
 void Motor_Diff_PD_Set(float Kp1, float Kp2, float Kd1, float Kd2, float coLimit, float boost);
+
+void Motor_Angle(uint8 Angle_target, uint8 Dir);
+void Motor_Angle_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
+
 void Motor1_PIDwork(void);
 void Motor2_PIDwork(void);
 

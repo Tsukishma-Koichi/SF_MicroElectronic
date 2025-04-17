@@ -35,7 +35,7 @@
 
 
 #include "zf_common_headfile.h"
-#include "headfile.h"
+#include "headfile0.h"
 extern uint8 pit_00_state;
 extern uint8 pit_01_state;
 extern uint8 pit_02_state;

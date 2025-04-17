@@ -6,4 +6,7 @@
 #endif
 
 void Main_Init(void);
-void my_ipc_callback(int receive_data);
+void get_threshold();
+void get_angel();
+void time_cnt();
+void draw_line(int x0, int y0, int x1, int y1);
