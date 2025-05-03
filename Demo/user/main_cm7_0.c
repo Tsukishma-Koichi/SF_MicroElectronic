@@ -23,6 +23,12 @@ uint8 pit_02_state = 0;
 
 uint8 key2_state = 0;
 
+#define FLASH_SECTION_INDEX       (0)                                 // 存储数据用的扇区
+#define FLASH_PAGE_INDEX          (0)                                // 存储数据用的页码 倒数第一个页码
+uint16 i = 0;
+
+#define NAV_LEN     (300)
+
 int main(void)
 {
     clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
@@ -30,12 +36,13 @@ int main(void)
     OSC_Init();
     pit_ms_init(PIT0, 20);
     pit_ms_init(PIT1, 100);
-    pit_ms_init(PIT2, 500);
+    pit_ms_init(PIT2, 20);
 //    WLUART_Init();
     UART_Init();
     Encoder_Init();
     Motor_Init();
-    
+    flash_init();                                                               // 使用flash前先调用flash初始化
+    flash_buffer_clear();                                                       // 清空缓冲区
     
 //    SCB_DisableDCache(); // 关闭DCashe
 //    ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口1 填写中断回调函数
@@ -49,6 +56,13 @@ int main(void)
     // PID初始化
     Motor_PID_Init();  
     
+    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);        // 将数据从 flash 读取到缓冲区
+    for (uint16 i=0; i < NAV_LEN; i++)
+    {
+        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
+    }
+    printf("over2");
+    
     while(true)         //一键启动
     {
         if(!gpio_get_level(KEY1))         // 获取 KEYx 电平为低
@@ -59,8 +73,8 @@ int main(void)
 
     while(true)
     {
-        
         SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
+
 
         if(pit_00_state)        //20ms 编码器|电机|陀螺仪
         {
@@ -69,32 +83,53 @@ int main(void)
             //Gyroscope_GetData();
             Encoder_SpeedRead();
             Monitor_ReRead();
-
-            Motor_Diff();
+            
+            Motor_Diff(Monitor_Data);
             
             Motor1_PIDwork();
             Motor2_PIDwork();
             
 //            Motor_SetSpeed(MOTOR_2, 3000);
 //            Motor_SetSpeed(MOTOR_1, 3000);
-            
             pit_00_state = 0;
         }
         
         if(pit_01_state)        //100ms 虚拟示波器
         {
-            OSC_Send((int)Gyro_z, Monitor_Data, Motor1_target, Motor2_target, Motor_target, Encoder_1Data, Encoder_2Data, filtered_z_gyro);
+//            OSC_Send((int)Gyro_z, Monitor_Data, Motor1_target, Motor2_target, Motor_target, Encoder_1Data, Encoder_2Data, filtered_z_gyro);
 
             pit_01_state = 0;
         }
         
-        if(pit_02_state)        //50ms
+        if(pit_02_state)        //10ms
         {
+//            if (i < NAV_LEN)
+//            {
+//                flash_union_buffer[i].int16_type = Monitor_Data;
+//                printf("%d:%d\t%d\n", i, flash_union_buffer[i].int16_type, Monitor_Data);
+//                i++;
+//            }
             
             pit_02_state = 0;
         }
-//        system_delay_ms(50);
+        
+//        if (i == NAV_LEN)
+//        {
+//            break;
+//        }
+//        system_delay_ms(100);
     }
+    
+//    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);     // 向指定 Flash 扇区的页码写入缓冲区数据
+//    printf("over1");
+    
+//    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAL_LEN);        // 将数据从 flash 读取到缓冲区
+//    for (uint16 i=0; i < NAV_LEN; i++)
+//    {
+//        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
+//    }
+//    printf("over2");
+    
 }
 
 

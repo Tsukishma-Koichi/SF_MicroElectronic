@@ -100,16 +100,14 @@ int main(void)
             Bend_detect(&E);
             
 //            // 发送位置偏差
-            m7_0_data[0] = get_offset(&E);     
-//            printf("L:%d\nM:%d\n", L_boundary[20], MT9V03X_W/2);
-//            printf("FLAG:%d\nM7:%d\n", search_line_mode, m7_0_data[0]);
+            m7_0_data[0] = get_offset(&E);    
             SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
 //            ipc_send_data(m7_1_data);
             
             // 显示图像
             ips114_displayimage03x((const uint8 *)img, MT9V03X_W, MT9V03X_H);    //显示图像
 //            get_angel();
-//            printf("G:%f\n", Gyro_z);
+//            printf("G:%f\tF:%f\n", Gyro_z, filtered_z_gyro);
         }
        //get_threshold();          // 计算二值化阈值
     }

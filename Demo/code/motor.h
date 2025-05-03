@@ -89,7 +89,7 @@ void Motor2_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, f
 void Motor_pidClear(void);
 
 //void Motor_GetTarget(void);
-void Motor_Diff(void);
+void Motor_Diff(int16 Diff_Data);
 void Motor_Diff_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, float coLimit, float boost);
 void Motor_Diff_PD_Set(float Kp1, float Kp2, float Kd1, float Kd2, float coLimit, float boost);
 

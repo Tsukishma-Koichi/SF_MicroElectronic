@@ -307,9 +307,9 @@ int get_offset(ELEMENT_STATE *E)
                 case NORMAL_MODE:
                   {sum_offset += M_boundary[i] -  MT9V03X_W/2;} break;
                 case 1:
-                  {sum_offset +=  L_boundary[i] -  MT9V03X_W/2;} break;
+                  {sum_offset += L_boundary[i] -  MT9V03X_W/2;} break;
                 case RIGHT_MODE:
-                  {sum_offset += 20 + R_boundary[i] -  MT9V03X_W/2;} break;
+                  {sum_offset += R_boundary[i] -  MT9V03X_W/2;} break;
             }      
         }
         
