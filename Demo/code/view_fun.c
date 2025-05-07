@@ -107,10 +107,12 @@ void mean_filter(uint8 *src, uint8 *dst) {
     }
 }
 
+uint8 miss_line = 0;
 
 // 寻白
 uint8 seek_white(uint8 mid, uint8 row, uint8 img[MT9V03X_H][MT9V03X_W])
 {
+    miss_line = 0;
     uint8 left = mid;
     uint8 right = mid;
     while(right < MT9V03X_W && left > 0) {
@@ -124,7 +126,11 @@ uint8 seek_white(uint8 mid, uint8 row, uint8 img[MT9V03X_H][MT9V03X_W])
         }
         left --;
         right++;
+        if(left == 0) {
+            miss_line = MT9V03X_H - row;
+        } 
     }
+    
     return mid;
 }
 
@@ -136,7 +142,7 @@ int bend_offset;
 //  中点继承法巡线
 extern uint8 L_boundary[MT9V03X_H], R_boundary[MT9V03X_H], M_boundary[MT9V03X_H];    // 左右边界及中线数组
 extern int search_line_mode;
-uint8 valid_length= 0;
+uint8 valid_length;
 
 void mid_seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
 {
@@ -195,6 +201,7 @@ void mid_seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
         ips114_draw_point(mid, i, RGB565_BROWN); 
         index ++;
     }
+    if (valid_length == 0) valid_length = 119;
 }
 
 
@@ -292,7 +299,7 @@ void LR_seek_boundary(uint8 img[MT9V03X_H][MT9V03X_W])
         ips114_draw_point(preleft, i, RGB565_BLUE); 
         ips114_draw_point(M_boundary[index], i, RGB565_BROWN); 
     }
-    valid_length = index;
+    if (valid_length == 0) valid_length = index;
 }
 
 
@@ -384,7 +391,7 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
         // ===================== 入环判断 ===================== 
         int jump_L = 6;          // 跳变下限
         int jump_H = 24;         // 跳变上限
-        int White_th = 12;        // 白线阈值
+        int White_th = 10;        // 白线阈值
         
         if(Round->R_Enter_Flag == 0 && Round->L_Enter_Flag == 0) 
         {   
@@ -417,7 +424,7 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
                             break;
                         }
                         if (cnt >= White_th) {
-//                            Round->R_Enter_Flag = 1; 
+                            Round->R_Enter_Flag = 1; 
                             E->Round_Flag = 1;
                             search_line_mode= RIGHT_MODE;
                             ips114_show_string(155, 115, "EnterRR");
@@ -430,14 +437,15 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
         }
         
         // ===================== 环中判断 ===================== 
-        // 右环中
         if(Round->R_Enter_Flag == 1 && Round->R_In_Flag == 0) 
         {
             get_angel();
 //            printf("RI %f\r\n", Gyro_z);
-            if(Gyro_z <= -120) {
+            if(Gyro_z <= -180) {
                   search_line_mode= LEFT_MODE;
                   Round->R_In_Flag = 1;
+                  ips114_clear();
+                  ips114_show_string(155, 115, "InRR");
             }
         }
         
@@ -446,37 +454,78 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
         {
             get_angel();
 //            printf("LI %f\r\n", Gyro_z);
-            if(Gyro_z >= 120) {
+            if(Gyro_z >= 180) {
                   search_line_mode= RIGHT_MODE;
                   Round->L_In_Flag = 1;
+                  ips114_clear();
+                  ips114_show_string(155, 115, "InLR");
             }
         }
         
         // ===================== 出环判断 ===================== 
+        
+        int out_cnt = 0;         // 白点计数器
         if(Round->R_In_Flag == 1) 
+        {   
+            for (int i = 1; i < valid_length; i ++) {
+                // 左环岛下角点检测
+                if(L_boundary[i-1] - L_boundary[i] > jump_L && L_boundary[i] - L_boundary[i+1] < jump_H) {
+                    for(int j = 1; j <= i; j ++) {
+                        if (img[MT9V03X_H-1-i+j][L_boundary[i]] == 255) out_cnt ++;
+                        else{ 
+                            out_cnt = 0;
+                            break;
+                        }
+                        if (out_cnt >= White_th) {
+                            Round->L_Out_Flag = 1; 
+                            ips114_show_string(155, 115, "outRR");
+                            break;
+                        }
+                    }
+                    if (Round->R_Out_Flag== 1) break;
+                } 
+                
+            }
+        }
+        if(Round->L_In_Flag == 1) 
         {
-            get_angel();
-//            printf("RO %f\r\n", Gyro_z);
-            if(Gyro_z <= -600) {
-                  search_line_mode= NORMAL_MODE;
-                  Round->R_Out_Flag = 1;
-                  Round_Clear(Round);
-                  State_Clear(E);
-                  ips114_clear();
+            for (int i = 1; i < valid_length; i ++) {
+                // 右环岛下角点检测
+                if(R_boundary[i] - R_boundary[i-1] > jump_L && R_boundary[i] - R_boundary[i-1] < jump_H) {
+                    for(int j = 1; j <= i; j ++) {
+                        if (img[MT9V03X_H-1-i+j][R_boundary[i]] == 255) out_cnt ++;
+                        else{ 
+                            out_cnt = 0;
+                            break;
+                        }
+                        if (out_cnt >= White_th) {
+                            Round->R_Out_Flag = 1; 
+                            ips114_show_string(155, 115, "OutLR");
+                            break;
+                        }
+                    }
+                    if (Round->L_Out_Flag== 1) break;
+                } 
+            }
+        }
+        // ===================== 结束判断 ===================== 
+        if(Round->R_Out_Flag == 1 || Round->L_Out_Flag == 1) 
+        {
+            for(int i = 5; i <= 50; i++)
+            {
+                if(abs(L_boundary[i+1] -  L_boundary[0]) > 5 || abs(R_boundary[i+1] -  R_boundary[0]) > 5)
+                    break;
+                if(i == 50) {
+                    Round->Finish_Flag = 1;
+                }
+            }
+            if(Round->Finish_Flag == 1) {
+                search_line_mode= NORMAL_MODE;
+                Round_Clear(Round);
+                State_Clear(E);
+                ips114_clear();
             }
             
-        }
-        if(Round->L_In_Flag == 1)
-        {
-            get_angel();
-//            printf("LO %f\r\n", Gyro_z);
-            if(Gyro_z >= 600) {
-                  search_line_mode= NORMAL_MODE;
-                  Round->L_Out_Flag = 1;
-                  Round_Clear(Round);
-                  State_Clear(E);
-                  ips114_clear();
-            }
         }
     }
 }
@@ -488,19 +537,31 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
 void StartStopZone_detect(ELEMENT_STATE*E)
 {
     if(State_Check(E) == 0 || State_Check(E) == SSZ) {
-        int jump_th = 20;               //跳变阈值
-        uint8 L_jump = 0, R_jump = 0;   //跳变所在行
-        for (int i = 1; i < valid_length; i++)
+        for (int i = 0; i <= 5; i++)
         {
-            if (L_boundary[i-1] - L_boundary[i] >= jump_th) L_jump = i;
-            if (L_boundary[i] - L_boundary[i-1] >= jump_th) R_jump = i;
+            //if (L_boundary[i-4] - L_boundary[i] >= jump_th) L_jump = i;
+            //if (L_boundary[i] - L_boundary[i-4] >= jump_th) R_jump = i;
+//          printf("L:%d, R:%d, M:%d, %d\r\n", L_boundary[i], R_boundary[i], M_boundary[i], i);
+          if(R_boundary[i] - L_boundary[i] >= 60 && abs(M_boundary[i] - 94) < 12) {
+              E->SSZone_Flag = 1;
+              m7_0_data[1] = SSZ;
+              ips114_show_string(155, 115, "StopZone");
+              break;
+          }
+          if (i == 5) {
+              State_Clear(E);
+              m7_0_data[1] = 0;
+          }
         }
-        if (abs(L_jump - R_jump) <= 5 && L_jump != 0 && R_jump != 0) {
+        /*if (abs(L_jump - R_jump) <= 8 && L_jump != 0 && R_jump != 0) {
             E->SSZone_Flag = 1;
             m7_0_data[1] = SSZ;
             ips114_show_string(155, 115, "StopZone");
         }
-        else State_Clear(E);
+        else {
+          State_Clear(E);
+          m7_0_data[1] = 0;
+        }*/
     }
 }
 
@@ -563,16 +624,41 @@ uint8 DashedLine_detect()
 
 //  --------------------  断 路 -------------------- 
 
-uint8 OpenRoad_detect(ELEMENT_STATE*E)
+void OpenRoad_detect(ELEMENT_STATE*E, uint8 img[MT9V03X_H][MT9V03X_W])
 {
+    /*if(State_Check(E) == 0 || State_Check(E) == OR) {
+      //printf("vl  %d\r\n", valid_length);
+      if(valid_length <= 8 || (valid_length == 15 && miss_line == 1)) {
+          ips114_show_string(155, 115, "OpenRoad");
+          m7_0_data[1] = OR;
+          E->OR_Flag = 1;
+      }
+      if(valid_length >= 60) {
+        if(E->OR_Flag == 1) {
+          m7_0_data[1] = 0;
+          State_Clear(E);
+          ips114_clear();
+        }
+      }
+    }*/
     if(State_Check(E) == 0 || State_Check(E) == OR) {
-        
+      for (int i = 0; i<= 40; i++) {
+        if(img[MT9V03X_H-1-i][M_boundary[i]] != 0) {
+              break;
+        }
+        if(i == 40) {
+            ips114_show_string(155, 115, "OpenRoad");
+            m7_0_data[1] = OR;
+            E->OR_Flag = 1;
+        }
+      }
+      if (E->OR_Flag == 1 && valid_length >= 60) {
+          m7_0_data[1] = 0;
+          State_Clear(E);
+          ips114_clear();
+      }
     }
-    return 0;
 }
-
-
-//
 
 
 

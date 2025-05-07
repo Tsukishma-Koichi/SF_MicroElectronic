@@ -58,7 +58,7 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
 void StartStopZone_detect(ELEMENT_STATE*E);
 void Bend_detect(ELEMENT_STATE*E);
 uint8 DashedLine_detect();
-uint8 OpenRoad_detect(ELEMENT_STATE*E);
+void OpenRoad_detect(ELEMENT_STATE*E, uint8 img[MT9V03X_H][MT9V03X_W]);
 
 #endif
 

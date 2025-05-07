@@ -25,9 +25,13 @@ uint8 key2_state = 0;
 
 #define FLASH_SECTION_INDEX       (0)                                 // 存储数据用的扇区
 #define FLASH_PAGE_INDEX          (0)                                // 存储数据用的页码 倒数第一个页码
-uint16 i = 0;
+uint16 Cnt = 30;
 
-#define NAV_LEN     (300)
+#define NAV_LEN     (180)
+int16 NAV[NAV_LEN];
+
+int Last_SSZ, Last_OR;
+uint8 Nav_Flag = 0;
 
 int main(void)
 {
@@ -55,13 +59,14 @@ int main(void)
 
     // PID初始化
     Motor_PID_Init();  
-    
+        
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);        // 将数据从 flash 读取到缓冲区
-    for (uint16 i=0; i < NAV_LEN; i++)
+    for (uint16 i=40; i < NAV_LEN; i++)
     {
-        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
+        NAV[i] = flash_union_buffer[i].int16_type;
+//        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
     }
-    printf("over2");
+//    printf("over2");
     
     while(true)         //一键启动
     {
@@ -70,11 +75,22 @@ int main(void)
             break;
         }
     }
+    
+    m7_0_data[4] = 1;
+    SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
+    system_delay_ms(100);
 
     while(true)
     {
         SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
-
+        
+        if (Last_SSZ == 0 && m7_0_data[1] == 3)    //停
+        {
+            Motor_SetSpeed(MOTOR_2, 0);
+            Motor_SetSpeed(MOTOR_1, 0);
+            break;
+        }
+        Last_SSZ = m7_0_data[1];
 
         if(pit_00_state)        //20ms 编码器|电机|陀螺仪
         {
@@ -82,10 +98,36 @@ int main(void)
 //            Gyroscope_Conut();
             //Gyroscope_GetData();
             Encoder_SpeedRead();
-            Monitor_ReRead();
             
-            Motor_Diff(Monitor_Data);
             
+            if (Last_OR == 0 && m7_0_data[1] == 4)
+            {
+                Nav_Flag = 1;
+//                printf("%d", m7_0_data[1]);
+            }
+            Last_OR = m7_0_data[1];
+            
+            if (Nav_Flag == 1 && Cnt < NAV_LEN)
+            {
+                Motor_Diff(NAV[Cnt]);
+                Cnt++;
+                if (Cnt == NAV_LEN)
+                {
+                  Nav_Flag = 0;
+                  printf("\r\n Nav_Flag:%d", Nav_Flag);
+                }
+            }
+            else
+            {
+                Monitor_ReRead();
+                Motor_Diff(Monitor_Data);
+            }
+//            if (Cnt < NAV_LEN)
+//            {
+//                flash_union_buffer[Cnt].int16_type = Monitor_Data;
+//                printf("%d:%d\t%d\n", Cnt, flash_union_buffer[Cnt].int16_type, Monitor_Data);
+//                Cnt++;
+//            }
             Motor1_PIDwork();
             Motor2_PIDwork();
             
@@ -93,6 +135,10 @@ int main(void)
 //            Motor_SetSpeed(MOTOR_1, 3000);
             pit_00_state = 0;
         }
+//        if (Cnt == NAV_LEN)
+//        {
+//            break;
+//        }
         
         if(pit_01_state)        //100ms 虚拟示波器
         {
@@ -103,32 +149,26 @@ int main(void)
         
         if(pit_02_state)        //10ms
         {
-//            if (i < NAV_LEN)
-//            {
-//                flash_union_buffer[i].int16_type = Monitor_Data;
-//                printf("%d:%d\t%d\n", i, flash_union_buffer[i].int16_type, Monitor_Data);
-//                i++;
-//            }
+
             
             pit_02_state = 0;
         }
         
-//        if (i == NAV_LEN)
-//        {
-//            break;
-//        }
+
 //        system_delay_ms(100);
     }
     
 //    flash_write_page_from_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);     // 向指定 Flash 扇区的页码写入缓冲区数据
 //    printf("over1");
-    
-//    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAL_LEN);        // 将数据从 flash 读取到缓冲区
-//    for (uint16 i=0; i < NAV_LEN; i++)
+//    
+//    flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);        // 将数据从 flash 读取到缓冲区
+//    for (uint16 i=0; i < 50; i++)
 //    {
 //        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
 //    }
 //    printf("over2");
+//    Motor_SetSpeed(MOTOR_2, 0);
+//    Motor_SetSpeed(MOTOR_1, 0);
     
 }
 

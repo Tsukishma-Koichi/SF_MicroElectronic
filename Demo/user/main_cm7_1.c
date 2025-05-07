@@ -78,9 +78,22 @@ int main(void)
     State_Clear(&E);              // 元素状态初始化
     Round_Clear(&R);              // 环岛状态初始化
     
+    while(true)         //一键启动
+    {
+      SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
+        if(m7_0_data[4] == 1)         // 获取 KEYx 电平为低
+        {
+//          printf("%d", m7_0_data[4]);
+            break;
+        }
+    }
+    system_delay_ms(100);
+    
     while(true)
     {
         // 接受到新的帧
+      
+        
         if (mt9v03x_finish_flag)
         {
             mt9v03x_finish_flag = 0;
@@ -96,16 +109,17 @@ int main(void)
             
             // 元素识别
             Roundabout_detect(img, &R, &E);
-            //StartStopZone_detect(&E);
+            StartStopZone_detect(&E);
             Bend_detect(&E);
+            OpenRoad_detect(&E, img);
             
 //            // 发送位置偏差
             m7_0_data[0] = get_offset(&E);    
             SCB_CleanInvalidateDCache_by_Addr(&m7_0_data, sizeof(m7_0_data));
-//            ipc_send_data(m7_1_data);
             
             // 显示图像
             ips114_displayimage03x((const uint8 *)img, MT9V03X_W, MT9V03X_H);    //显示图像
+           
 //            get_angel();
 //            printf("G:%f\tF:%f\n", Gyro_z, filtered_z_gyro);
         }
