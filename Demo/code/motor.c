@@ -98,13 +98,13 @@ void Motor2_PID_Set(float K_p_set, float K_i_set, float K_d_set, float pLimit, f
  */
 void Motor_Diff(int16 Diff_Data)
 {
-    if (Monitor_Data > MOTOR_Diff_threshold)
+    if (Diff_Data > MOTOR_Diff_threshold)
     {
         PID_2PD(&Motor_Diff_PD, 0, Diff_Data);
         Motor1_target = Motor_target - Motor_Diff_PD.ut;
         Motor2_target = Motor_target + Motor_Diff_PD.ut;
     }
-    else if (Monitor_Data < -MOTOR_Diff_threshold)
+    else if (Diff_Data < -MOTOR_Diff_threshold)
     {
         PID_2PD(&Motor_Diff_PD, 0, -Diff_Data);
         Motor1_target = Motor_target + Motor_Diff_PD.ut;

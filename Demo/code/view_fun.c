@@ -323,7 +323,7 @@ int get_offset(ELEMENT_STATE *E)
     }
 
 //    printf("FLAG:%d\nVL:%d", search_line_mode, valid_length);
-    if(E->Bend_Flag == 1) return bend_offset;
+    if(E->Bend_Flag == 1) return bend_offset*0.8;
     return sum_offset/5;
 }
 

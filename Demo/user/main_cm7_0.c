@@ -17,6 +17,7 @@
 #define KEY1                    (P20_0)
 #define KEY2                    (P20_1)
 #define KEY3                    (P20_2)
+#define BUZZER_PIN              (P19_4)
 uint8 pit_00_state = 0;
 uint8 pit_01_state = 0;
 uint8 pit_02_state = 0;
@@ -25,9 +26,9 @@ uint8 key2_state = 0;
 
 #define FLASH_SECTION_INDEX       (0)                                 // 存储数据用的扇区
 #define FLASH_PAGE_INDEX          (0)                                // 存储数据用的页码 倒数第一个页码
-uint16 Cnt = 30;
+uint16 Cnt = 43;
 
-#define NAV_LEN     (180)
+#define NAV_LEN     (150)
 int16 NAV[NAV_LEN];
 
 int Last_SSZ, Last_OR;
@@ -47,6 +48,7 @@ int main(void)
     Motor_Init();
     flash_init();                                                               // 使用flash前先调用flash初始化
     flash_buffer_clear();                                                       // 清空缓冲区
+    gpio_init(BUZZER_PIN, GPO, GPIO_LOW, GPO_PUSH_PULL);
     
 //    SCB_DisableDCache(); // 关闭DCashe
 //    ipc_communicate_init(IPC_PORT_1, my_ipc_callback);  // 初始化IPC模块 选择端口1 填写中断回调函数
@@ -61,10 +63,10 @@ int main(void)
     Motor_PID_Init();  
         
     flash_read_page_to_buffer(FLASH_SECTION_INDEX, FLASH_PAGE_INDEX, NAV_LEN);        // 将数据从 flash 读取到缓冲区
-    for (uint16 i=40; i < NAV_LEN; i++)
+    for (uint16 i=Cnt; i < NAV_LEN; i++)
     {
         NAV[i] = flash_union_buffer[i].int16_type;
-//        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
+        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
     }
 //    printf("over2");
     
@@ -109,10 +111,12 @@ int main(void)
             
             if (Nav_Flag == 1 && Cnt < NAV_LEN)
             {
+                gpio_toggle_level(BUZZER_PIN);
                 Motor_Diff(NAV[Cnt]);
                 Cnt++;
                 if (Cnt == NAV_LEN)
                 {
+                  gpio_set_level(BUZZER_PIN, GPIO_LOW);
                   Nav_Flag = 0;
                   printf("\r\n Nav_Flag:%d", Nav_Flag);
                 }
@@ -128,6 +132,15 @@ int main(void)
 //                printf("%d:%d\t%d\n", Cnt, flash_union_buffer[Cnt].int16_type, Monitor_Data);
 //                Cnt++;
 //            }
+            
+//            Motor_Diff(NAV[Cnt]);
+//            printf("\r\nNAV:%d", NAV[Cnt]);
+//            Cnt++;
+//            if (Cnt == NAV_LEN)
+//            {
+//                break;
+//            }
+            
             Motor1_PIDwork();
             Motor2_PIDwork();
             
@@ -167,8 +180,8 @@ int main(void)
 //        printf("\r\n %d: %d", i, flash_union_buffer[i].int16_type);
 //    }
 //    printf("over2");
-//    Motor_SetSpeed(MOTOR_2, 0);
-//    Motor_SetSpeed(MOTOR_1, 0);
+    Motor_SetSpeed(MOTOR_2, 0);
+    Motor_SetSpeed(MOTOR_1, 0);
     
 }
 
