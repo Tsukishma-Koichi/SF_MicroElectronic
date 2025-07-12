@@ -34,6 +34,8 @@ int16 NAV[NAV_LEN];
 int Last_SSZ, Last_OR;
 uint8 Nav_Flag = 0;
 
+uint8 Bend_Flag = 0;
+
 int main(void)
 {
     clock_init(SYSTEM_CLOCK_250M); 	// 时钟配置及系统初始化<务必保留>
@@ -109,6 +111,16 @@ int main(void)
             }
             Last_OR = m7_0_data[1];
             
+            if (Bend_Flag == 0 && m7_0_data[1] == 2 && m7_0_data[2] == 1)
+            {
+                Bend_Flag = 1;
+            }
+            else if (Bend_Flag == 0 && m7_0_data[1] == 2 && m7_0_data[2] == 2)
+            {
+                Bend_Flag = 2;
+            }
+          
+            
             if (Nav_Flag == 1 && Cnt < NAV_LEN)
             {
                 gpio_toggle_level(BUZZER_PIN);
@@ -119,6 +131,15 @@ int main(void)
                   gpio_set_level(BUZZER_PIN, GPIO_LOW);
                   Nav_Flag = 0;
                   printf("\r\n Nav_Flag:%d", Nav_Flag);
+                }
+            }
+            else if (Bend_Flag == 1)
+            {
+                while (1)
+                {
+                    Motor_Diff();
+                    if (Monitor_Data )
+                      break;
                 }
             }
             else

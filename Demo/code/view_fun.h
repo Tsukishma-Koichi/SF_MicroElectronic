@@ -41,6 +41,7 @@ struct STRUCT_ROUNDABOUT {
 
 typedef struct STRUCT_ROUNDABOUT ROUND;
 
+
 uint8 otsu_threshold(uint8 *image_data, uint32 width, uint32 height);
 void image_binarize(uint8 *src, uint8 *dst, uint32 width, uint32 height, uint8 threshold);
 void mean_filter(uint8 *src, uint8 *dst);
@@ -57,8 +58,10 @@ void Roundabout_detect(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_ST
 
 void StartStopZone_detect(ELEMENT_STATE*E);
 void Bend_detect(ELEMENT_STATE*E);
-uint8 DashedLine_detect();
+void DashedLine_detect(ELEMENT_STATE*E, uint8 img[MT9V03X_H][MT9V03X_W]);
 void OpenRoad_detect(ELEMENT_STATE*E, uint8 img[MT9V03X_H][MT9V03X_W]);
+
+void Roundabout_detect2(uint8 img[MT9V03X_H][MT9V03X_W], ROUND *Round, ELEMENT_STATE*E);
 
 #endif
 

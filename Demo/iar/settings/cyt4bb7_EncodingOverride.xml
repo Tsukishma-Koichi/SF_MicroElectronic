@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<userOverrides>
+    <override>
+        <path>E:\IAR\V1.2.2_250503\Demo\code\view_fun.c</path>
+        <encoding>System</encoding>
+    </override>
+    <override>
+        <path>E:\IAR\V1.2.2_250503\Demo\user\main_cm7_0.c</path>
+        <encoding>System</encoding>
+    </override>
+</userOverrides>
